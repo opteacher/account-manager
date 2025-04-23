@@ -1,3 +1,5 @@
+import { gnlCpy } from "@lib/utils"
+
 export default class MidLgn {
   key: string
   path: string
@@ -48,23 +50,8 @@ export default class MidLgn {
     this.hasLabel = true
   }
 
-  static copy(src: any, tgt?: MidLgn): MidLgn {
-    tgt = tgt || new MidLgn()
-    tgt.key = src.key || src._id || tgt.key
-    tgt.path = src.path || tgt.path
-    tgt.bkgdColor = src.bkgdColor || tgt.bkgdColor
-    tgt.background = src.background || tgt.background
-    tgt.lblWidth = src.lblWidth || tgt.lblWidth
-    tgt.width = src.width || tgt.width
-    tgt.align = src.align || tgt.align
-    tgt.padding = src.padding || tgt.padding
-    tgt.radius = src.radius || tgt.radius
-    tgt.fmBkgdColor = src.fmBkgdColor || tgt.fmBkgdColor
-    tgt.registerable = typeof src.registerable !== 'undefined' ? src.registerable : tgt.registerable
-    tgt.title = typeof src.title !== 'undefined' ? src.title : tgt.title
-    tgt.logAccount = typeof src.logAccount !== 'undefined' ? src.logAccount : tgt.logAccount
-    tgt.hasLabel = typeof src.hasLabel !== 'undefined' ? src.hasLabel : tgt.hasLabel
-    return tgt
+  static copy(src: any, tgt?: MidLgn, force = false): MidLgn {
+    return gnlCpy(MidLgn, src, tgt, { force })
   }
 
   equals(to: any): boolean {

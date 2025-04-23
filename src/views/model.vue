@@ -64,48 +64,39 @@ import MainLayout from '@/layouts/main.vue'
 import models from '@/jsons/models.json'
 import { useRoute, useRouter } from 'vue-router'
 import { TinyEmitter as Emitter } from 'tiny-emitter'
-import { createByFields } from '@lib/types/mapper'
+import Mapper, { createByFields } from '@lib/types/mapper'
 import api from '@/apis/model'
 import { genDftFmProps } from '@/utils'
 import Column from '@lib/types/column'
 import project from '@/jsons/project.json'
-import puppeteer from 'puppeteer-core'
-import axios from 'axios'
-import { notification } from 'ant-design-vue'
 import Page from '@/types/page'
+import { onMounted, reactive, ref, watch } from 'vue'
+import Model from '@/types/model'
+import Table from '@/types/table'
 
 const route = useRoute()
 const router = useRouter()
-const mname = route.params.mname as string
-const model = (models as any)[mname]
-const table = model.table
-const columns = table.columns.map((col: any) => Column.copy(col))
-const mapper = createByFields(model.form.fields)
+const mname = ref<string>('')
+const model = reactive<Model>(new Model())
+const table = reactive<Table>(new Table())
+const columns = ref<Column[]>([])
+const mapper = ref<Mapper>(new Mapper())
 const emitter = new Emitter()
-const baseURL = import.meta.env.PROD ? 'http://127.0.0.1:9222' : undefined
 
+onMounted(refresh)
+watch(() => route.params.mname, refresh)
+
+function refresh() {
+  mname.value = route.params.mname as string
+  Model.copy(models.data.find((mdl: any) => mdl.name === mname.value), model, true)
+  Table.copy(model.table, table, true)
+  columns.value = table.columns.map((col: any) => Column.copy(col))
+  mapper.value = createByFields(model.form.fields)
+  emitter.emit('update:mapper', mapper.value)
+  emitter.emit('refresh')
+}
 async function onLgnPgClick(pgInfo: Page) {
-  let resp = null
-  try {
-    resp = await axios.get('/json/version', { baseURL })
-    if (resp.status !== 200) {
-      throw new Error()
-    }
-    console.log(resp.data)
-    let browserWSEndpoint = resp.data.webSocketDebuggerUrl
-    if (import.meta.env.DEV) {
-      browserWSEndpoint = browserWSEndpoint.replaceAll('ws://127.0.0.1:9222', '')
-    }
-    const browser = await puppeteer.connect({ browserWSEndpoint })
-    const page = await browser.newPage()
-    await Promise.all([page.goto(pgInfo.url), page.waitForNavigation()])
-  } catch (e) {
-    notification.error({
-      message: '无法获取浏览器WS端点',
-      description: 'Chrome快捷方式–右键属性–目标 在最后添加【--remote-debugging-port=9222】参数'
-    })
-    return
-  }
+  await window.ipcRenderer.invoke('puppeteer_launch', pgInfo)
 }
 </script>
 

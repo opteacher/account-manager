@@ -45,7 +45,6 @@ const routes: Array<RouteRecordRaw> = [
     meta: { reqLogin: true }
   }
 ]
-console.log(routes)
 
 const router = createRouter({
   history: createWebHashHistory(),

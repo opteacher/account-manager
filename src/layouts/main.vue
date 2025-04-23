@@ -85,18 +85,19 @@ import {
 import api from '@/apis/model'
 import { rmvStartsOf } from '@lib/utils'
 import * as antdIcons from '@ant-design/icons-vue/lib/icons'
+import Model from '@/types/model'
 
 const route = useRoute()
-const sdNavMdls = ref<{ name: string; label: string; icon: string }[]>([])
+const sdNavMdls = ref<Model[]>([])
 const sideKeys = reactive<string[]>([])
 const openKeys = reactive<string[]>([])
 const collapsed = ref(false)
 
 onMounted(async () => {
-  const mdls = Object.values(models).filter((model: any) => model.disp)
-  for (const mname of Object.keys(models)) {
+  const mdls = models.data.filter((model: any) => model.disp)
+  for (const mname of models.data.map(mdl => mdl.name)) {
     try {
-      await api.all(mname, { axiosConfig: { params: { limit: 1 } } })
+      await api.all(mname, { messages: { notShow: true }, axiosConfig: { params: { limit: 1 } } })
     } catch (e) {
       mdls.splice(
         mdls.findIndex((mdl: any) => mdl.name === mname),
@@ -104,7 +105,7 @@ onMounted(async () => {
       )
     }
   }
-  sdNavMdls.value = mdls as { name: string; label: string; icon: string }[]
+  sdNavMdls.value = mdls.map(mdl => Model.copy(mdl))
   actSideKeys(route.path)
 })
 router.beforeEach(to => actSideKeys(to.path))

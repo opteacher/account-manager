@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
@@ -25,6 +25,9 @@ function createWindow() {
   } else {
     win.loadFile(path.join(RENDERER_DIST, "index.html"));
   }
+  ipcMain.handle("puppeteer_launch", (pgInfo) => {
+    console.log(pgInfo);
+  });
 }
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {

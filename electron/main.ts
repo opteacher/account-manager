@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
@@ -45,6 +45,10 @@ function createWindow() {
     // win.loadFile('dist/index.html')
     win.loadFile(path.join(RENDERER_DIST, 'index.html'))
   }
+
+  ipcMain.handle('puppeteer_launch', pgInfo => {
+    console.log(pgInfo)
+  })
 }
 
 // Quit when all windows are closed, except on macOS. There, it's common
