@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { makeRequest } from '@lib/utils'
-import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
+import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router'
 import Model from '../views/model.vue'
 import login from '../views/login.vue'
 import project from '@/jsons/project.json'
@@ -23,7 +23,7 @@ const routes: Array<RouteRecordRaw> = [
     component: Home
   },
   {
-    path: `/${project.name}/:mname`,
+    path: `/${project.name}/page`,
     name: 'model',
     component: Model
   },
@@ -34,7 +34,7 @@ const routes: Array<RouteRecordRaw> = [
     meta: { reqLogin: true }
   },
   {
-    path: '/login_platform/login',
+    path: '/login_platform/:mname',
     name: 'login',
     component: login
   },
@@ -45,9 +45,10 @@ const routes: Array<RouteRecordRaw> = [
     meta: { reqLogin: true }
   }
 ]
+console.log(routes)
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(),
   routes
 })
 

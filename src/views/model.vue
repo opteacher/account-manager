@@ -20,10 +20,10 @@
       :addable="table.operable.includes('可增加')"
       :delable="table.operable.includes('可删除')"
       :clkable="false"
-      @add="() => $router.push(`/${project.name}/page/n/edit`)"
-      @edit="(record: any) => $router.push(`/${project.name}/page/${record.id}/edit`)"
+      @add="() => router.push(`/${project.name}/page/n/edit`)"
+      @edit="(record: any) => router.push(`/${project.name}/page/${record.id}/edit`)"
     >
-      <template v-if="$route.path === `/${project.name}/page`" #slots="{ record }">
+      <template v-if="route.path === `/${project.name}/page`" #slots="{ record }">
         <a-table
           class="slot-table"
           size="small"
@@ -50,7 +50,7 @@
           </template>
         </a-table>
       </template>
-      <template v-if="$route.path === `/${project.name}/page`" #operaBefore="{ record }">
+      <template v-if="route.path === `/${project.name}/page`" #operaBefore="{ record }">
         <a-button type="primary" size="small" @click.stop="() => onLgnPgClick(record)">
           登录
         </a-button>
@@ -62,19 +62,20 @@
 <script setup lang="ts">
 import MainLayout from '@/layouts/main.vue'
 import models from '@/jsons/models.json'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { TinyEmitter as Emitter } from 'tiny-emitter'
 import { createByFields } from '@lib/types/mapper'
 import api from '@/apis/model'
 import { genDftFmProps } from '@/utils'
 import Column from '@lib/types/column'
 import project from '@/jsons/project.json'
-import puppeteer from 'puppeteer-core/lib/esm/puppeteer/puppeteer-core-browser.js'
+import puppeteer from 'puppeteer-core'
 import axios from 'axios'
 import { notification } from 'ant-design-vue'
 import Page from '@/types/page'
 
 const route = useRoute()
+const router = useRouter()
 const mname = route.params.mname as string
 const model = (models as any)[mname]
 const table = model.table

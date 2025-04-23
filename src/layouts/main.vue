@@ -17,38 +17,44 @@
       </div>
     </a-layout-header>
     <a-layout class="h-full">
-      <a-layout-sider width="200" v-model:collapsed="collapsed" :trigger="null" collapsible>
+      <a-layout-sider
+        class="h-full flex flex-col"
+        width="200"
+        v-model:collapsed="collapsed"
+        :trigger="null"
+        collapsible
+      >
         <a-menu
           :selectedKeys="sideKeys"
           :openKeys="openKeys"
           mode="inline"
-          class="h-full border-r-0"
+          class="flex-1 border-r-0"
           theme="dark"
           @select="onMuItmSelect"
         >
           <a-menu-item key="home">
             <HomeOutlined />
-            首页
+            <span>首页</span>
           </a-menu-item>
           <a-menu-item v-for="model in sdNavMdls" :key="model.name">
-            {{ model.label }}
+            <keep-alive v-if="model.icon">
+              <component :is="getIconCompo(model.icon)" />
+            </keep-alive>
+            <span>{{ model.label }}</span>
           </a-menu-item>
           <a-menu-item key="page/n/edit">
             <FormOutlined />
-            编辑页面
+            <span>编辑页面</span>
           </a-menu-item>
           <a-menu-item v-if="sideKeys.includes('page/n/view')" key="page/n/view">
             <EyeOutlined />
-            查看页面
+            <span>查看页面</span>
           </a-menu-item>
-
-          <a-menu-item>
-            <menu-unfold-outlined
-              v-if="collapsed"
-              class="trigger"
-              @click="() => (collapsed = !collapsed)"
-            />
-            <menu-fold-outlined v-else class="trigger" @click="() => (collapsed = !collapsed)" />
+        </a-menu>
+        <a-menu>
+          <a-menu-item class="text-center" @click="() => (collapsed = !collapsed)">
+            <menu-unfold-outlined v-if="collapsed" class="text-lg" />
+            <menu-fold-outlined v-else class="text-lg" />
           </a-menu-item>
         </a-menu>
       </a-layout-sider>
@@ -64,7 +70,7 @@
 <script lang="ts" setup>
 import router from '../router'
 import { SelectInfo } from 'ant-design-vue/lib/menu/src/interface'
-import { onMounted, reactive, ref } from 'vue'
+import { type Component, onMounted, reactive, ref } from 'vue'
 import project from '@/jsons/project.json'
 import models from '@/jsons/models.json'
 import { useRoute } from 'vue-router'
@@ -78,9 +84,10 @@ import {
 } from '@ant-design/icons-vue'
 import api from '@/apis/model'
 import { rmvStartsOf } from '@lib/utils'
+import * as antdIcons from '@ant-design/icons-vue/lib/icons'
 
 const route = useRoute()
-const sdNavMdls = ref<{ name: string; label: string }[]>([])
+const sdNavMdls = ref<{ name: string; label: string; icon: string }[]>([])
 const sideKeys = reactive<string[]>([])
 const openKeys = reactive<string[]>([])
 const collapsed = ref(false)
@@ -97,7 +104,7 @@ onMounted(async () => {
       )
     }
   }
-  sdNavMdls.value = mdls as { name: string; label: string }[]
+  sdNavMdls.value = mdls as { name: string; label: string; icon: string }[]
   actSideKeys(route.path)
 })
 router.beforeEach(to => actSideKeys(to.path))
@@ -113,10 +120,13 @@ function actSideKeys(path: string) {
   sideKeys.splice(0, sideKeys.length, fixPath)
 }
 function onMuItmSelect(params: SelectInfo) {
-  router.push(`/${project.name}/` + (params.keyPath || []).join('/'))
+  router.push(`/${project.name}/${(params.keyPath || []).join('/')}`)
 }
 function onLogoutClick() {
   window.localStorage.removeItem('token')
   router.replace({ path: `/${project.name}/login`, replace: true })
+}
+function getIconCompo(name: string): Component {
+  return (antdIcons as Record<string, Component>)[name]
 }
 </script>
