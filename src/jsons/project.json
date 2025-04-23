@@ -1,0 +1,159 @@
+{
+  "_id": "6614e9838dea0be27a5eac3c",
+  "name": "login_platform",
+  "port": 8051,
+  "volumes": [
+    {
+      "host": " /home/op/chrome-linux64",
+      "ctnr": "/app/puppeteer/chrome-linux"
+    }
+  ],
+  "thread": 861,
+  "database": "6614e93b8dea0be27a5ea938",
+  "dropDbs": false,
+  "https": false,
+  "independ": false,
+  "envVars": [],
+  "expPorts": [],
+  "models": ["6614eaf08dea0be27a5eaf67", "6614eb198dea0be27a5eb011"],
+  "services": [
+    "6614eaf08dea0be27a5eaf72",
+    "6614eaf08dea0be27a5eaf78",
+    "6614eaf08dea0be27a5eaf7e",
+    "6614eaf08dea0be27a5eaf84",
+    "6614eb0c8dea0be27a5eafc7",
+    "6614eb0c8dea0be27a5eafcd",
+    "6614eb0c8dea0be27a5eafd3",
+    "6614eb0c8dea0be27a5eafd9",
+    "6614eb198dea0be27a5eb01c",
+    "6614ee598dea0be27a5eb824",
+    "6614ee598dea0be27a5eb82a",
+    "6614ee598dea0be27a5eb830",
+    "6615f1788dea0be27a5ee819",
+    "6615f1788dea0be27a5ee82a",
+    "6615f1788dea0be27a5ee83b",
+    "6628c72a00521a4bae84ccd4",
+    "6628c72a00521a4bae84ccde",
+    "6628c72a00521a4bae84cce8",
+    "6628c8f7097fb4e63802c32d",
+    "6628c8f7097fb4e63802c337",
+    "6628c8f7097fb4e63802c341",
+    "6628c92d097fb4e63802c8f1",
+    "6628c92d097fb4e63802c8fb",
+    "6628c92d097fb4e63802c905",
+    "6628c95b45ba4eb2d3ccde29",
+    "6628c95b45ba4eb2d3ccde33",
+    "6628c95b45ba4eb2d3ccde3d",
+    "6667b437c8a64d4b44256d75"
+  ],
+  "typos": [],
+  "auth": {
+    "model": "6614eb198dea0be27a5eb011",
+    "skips": ["/api/v1/account/sign", "/api/v1/account/verify", "/api/v1/account/verify/deep"],
+    "props": [
+      {
+        "key": "900c6450-ffcc-481a-badf-28994edfd69a",
+        "name": "username",
+        "alg": "none"
+      },
+      {
+        "key": "167dde59-7a18-4ed0-95f2-dd463f97e046",
+        "name": "password",
+        "alg": "sha256"
+      }
+    ],
+    "roles": [
+      {
+        "name": "guest",
+        "extend": "",
+        "rules": [
+          {
+            "method": "ALL",
+            "path": "/api/v1/account",
+            "value": "*/*",
+            "idens": [],
+            "action": "",
+            "_id": "6628c95b45ba4eb2d3ccde57"
+          },
+          {
+            "method": "POST",
+            "path": "/mdl/v1/account",
+            "value": "/",
+            "idens": [],
+            "action": "",
+            "_id": "6628c95b45ba4eb2d3ccde58"
+          }
+        ],
+        "_id": "6628c95b45ba4eb2d3ccde56"
+      },
+      {
+        "name": "manager",
+        "extend": "",
+        "rules": [
+          {
+            "method": "ALL",
+            "path": "/mdl/v1/page",
+            "value": "*/*",
+            "idens": [],
+            "action": "",
+            "_id": "6628c95b45ba4eb2d3ccde5a"
+          },
+          {
+            "method": "ALL",
+            "path": "/mdl/v1/account",
+            "value": "*/*",
+            "idens": [],
+            "action": "",
+            "_id": "6628c95b45ba4eb2d3ccde5b"
+          },
+          {
+            "method": "GET",
+            "path": "/page",
+            "value": "/",
+            "idens": [],
+            "action": "",
+            "_id": "662dfd43ba609ad38b887ada"
+          },
+          {
+            "method": "GET",
+            "path": "/api/v1/page/element",
+            "value": "s",
+            "idens": [],
+            "action": "collect",
+            "remark": "",
+            "_id": "66693978c8a64d4b4425ba8e"
+          }
+        ],
+        "_id": "6628c95b45ba4eb2d3ccde59"
+      }
+    ],
+    "apis": [],
+    "_id": "6614e9838dea0be27a5eac3d"
+  },
+  "middle": {
+    "lclDep": true,
+    "prefix": "",
+    "login": {
+      "logAccount": true,
+      "_id": "66161fc25d71ed1eeeacf20a"
+    },
+    "navigate": {
+      "path": "/home",
+      "theme": "dark",
+      "logo": "",
+      "_id": "6614e9838dea0be27a5eac42"
+    },
+    "dashboard": {
+      "bkgdColor": "#FFFFFF",
+      "padding": [16, 16],
+      "children": [],
+      "_id": "6614e9838dea0be27a5eac43"
+    },
+    "_id": "6614e9838dea0be27a5eac40"
+  },
+  "__v": 69,
+  "logPid": 806,
+  "nickName": "密钥登录管理平台",
+  "extFiles": [],
+  "bldCmds": "sed -i \"s@http://deb.debian.org@https://mirrors.tuna.tsinghua.edu.cn@g\" /etc/apt/sources.list.d/debian.sources\napt update\napt install -y libnss3-dev libatk1.0-dev libatk-bridge2.0-dev libcups2-dev libdrm-dev libxkbcommon-dev libxcomposite-dev libxdamage-dev libxrandr-dev libgbm-dev libasound-dev"
+}

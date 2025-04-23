@@ -1,0 +1,53 @@
+{
+  "name": "account-manager",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc && vite build && electron-builder",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@ant-design/icons-vue": "^7.0.1",
+    "ant-design-vue": "^4.2.6",
+    "axios": "^1.8.4",
+    "codemirror": "^6.0.1",
+    "codemirror-editor-vue3": "^2.8.0",
+    "dayjs": "^1.11.13",
+    "happy-dom": "^17.4.4",
+    "lodash": "^4.17.21",
+    "paho-mqtt": "^1.1.0",
+    "pinia": "^3.0.2",
+    "qs": "^6.13.0",
+    "tiny-emitter": "^2.1.0",
+    "uuid": "^11.1.0",
+    "vanilla-jsoneditor": "^3.3.1",
+    "vue": "^3.4.21",
+    "vue-router": "^4.5.0",
+    "vue3-ace-editor": "^2.2.4",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.18.12/xlsx-0.18.12.tgz"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.3",
+    "@types/codemirror": "^5.60.15",
+    "@types/lodash": "^4.17.16",
+    "@types/node": "^22.9.0",
+    "@types/paho-mqtt": "^1.0.10",
+    "@types/qs": "^6.9.17",
+    "@types/uuid": "^10.0.0",
+    "@vitejs/plugin-vue": "^5.0.4",
+    "@vue/tsconfig": "^0.7.0",
+    "autoprefixer": "^10.4.21",
+    "electron": "^30.0.1",
+    "electron-builder": "^24.13.3",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.2.2",
+    "vite": "^5.1.6",
+    "vite-plugin-electron": "^0.28.6",
+    "vite-plugin-electron-renderer": "^0.14.5",
+    "vue-tsc": "^2.0.26"
+  },
+  "main": "dist-electron/main.js"
+}

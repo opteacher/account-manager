@@ -1,0 +1,322 @@
+[
+  {
+    "_id": "6614eaf08dea0be27a5eaf67",
+    "name": "page",
+    "label": "页面",
+    "icon": "BorderlessTableOutlined",
+    "disp": true,
+    "desc": "",
+    "logTime": true,
+    "props": [
+      {
+        "name": "url",
+        "label": "页面URL",
+        "ptype": "String",
+        "index": false,
+        "unique": false,
+        "visible": true,
+        "relative": {
+          "model": "",
+          "belong": false,
+          "isArray": false,
+          "_id": "6615e1c18dea0be27a5ed8ef"
+        },
+        "remark": "",
+        "dftVal": "",
+        "_id": "6615e1c18dea0be27a5ed8ee"
+      },
+      {
+        "name": "slots",
+        "label": "填入槽",
+        "ptype": "Array",
+        "index": false,
+        "unique": false,
+        "visible": true,
+        "relative": {
+          "model": "",
+          "belong": false,
+          "isArray": false,
+          "_id": "667986f047eceeb4e62b8c92"
+        },
+        "remark": "xpath { string } - 页面元素\nitype { 'input' | 'select' | 'click' } - 操作方式\nvalue { string } - 填入值\nvalEnc { boolean (false) } - 加密",
+        "dftVal": [],
+        "_id": "667986f047eceeb4e62b8c91"
+      },
+      {
+        "name": "name",
+        "label": "名称",
+        "ptype": "String",
+        "index": true,
+        "unique": false,
+        "visible": true,
+        "relative": {
+          "model": "",
+          "belong": false,
+          "isArray": false,
+          "_id": "6615ec218dea0be27a5ee0d5"
+        },
+        "remark": "",
+        "dftVal": "",
+        "_id": "6615ec218dea0be27a5ee0d4"
+      }
+    ],
+    "form": {
+      "title": "新增/编辑",
+      "width": 50,
+      "labelWidth": 4,
+      "fields": [
+        {
+          "label": "页面URL",
+          "ftype": "Input",
+          "rules": [],
+          "refer": "url",
+          "_id": "6615e1c18dea0be27a5ed8f0"
+        },
+        {
+          "label": "填入槽",
+          "ftype": "EditList",
+          "rules": [],
+          "refer": "slots",
+          "_id": "6615e72a8dea0be27a5edaf6"
+        },
+        {
+          "label": "名称",
+          "ftype": "Input",
+          "rules": [],
+          "refer": "name",
+          "_id": "6615ec218dea0be27a5ee0d6"
+        }
+      ],
+      "_id": "6614eaf08dea0be27a5eaf8c"
+    },
+    "table": {
+      "title": "数据表",
+      "operaStyle": "button",
+      "size": "default",
+      "hasPages": true,
+      "refresh": [],
+      "operable": [],
+      "imExport": [],
+      "columns": [
+        {
+          "title": "页面URL",
+          "dataIndex": "url",
+          "group": [],
+          "_id": "6615e1c18dea0be27a5ed8f1"
+        },
+        {
+          "title": "填入槽",
+          "dataIndex": "slots",
+          "group": [],
+          "_id": "6615e72a8dea0be27a5edaf7"
+        },
+        {
+          "title": "名称",
+          "dataIndex": "name",
+          "group": [],
+          "_id": "6615ec218dea0be27a5ee0d7"
+        }
+      ],
+      "cells": [
+        {
+          "refer": "url",
+          "cdCell": {},
+          "color": "#000000",
+          "prefix": "",
+          "suffix": "",
+          "_id": "6615e1c18dea0be27a5ed8f7"
+        },
+        {
+          "refer": "slots",
+          "cdCell": {},
+          "color": "#000000",
+          "prefix": "",
+          "suffix": "",
+          "_id": "6615e72a8dea0be27a5edb01"
+        },
+        {
+          "refer": "name",
+          "cdCell": {},
+          "color": "#000000",
+          "prefix": "",
+          "suffix": "",
+          "_id": "6615ec218dea0be27a5ee0e5"
+        }
+      ],
+      "_id": "6614eaf08dea0be27a5eaf90"
+    },
+    "__v": 12
+  },
+  {
+    "_id": "6614eb198dea0be27a5eb011",
+    "name": "account",
+    "label": "管理账户",
+    "icon": "BorderlessTableOutlined",
+    "disp": false,
+    "desc": "",
+    "logTime": true,
+    "props": [
+      {
+        "name": "username",
+        "label": "账户名",
+        "ptype": "String",
+        "index": true,
+        "unique": true,
+        "visible": true,
+        "relative": {
+          "model": "",
+          "belong": false,
+          "isArray": false,
+          "_id": "66163279ca32f3b75d88ea0e"
+        },
+        "remark": "",
+        "dftVal": "",
+        "_id": "66163279ca32f3b75d88ea0d"
+      },
+      {
+        "name": "password",
+        "label": "密码",
+        "ptype": "String",
+        "index": false,
+        "unique": false,
+        "visible": true,
+        "relative": {
+          "model": "",
+          "belong": false,
+          "isArray": false,
+          "_id": "66163279ca32f3b75d88ea10"
+        },
+        "remark": "",
+        "dftVal": "",
+        "_id": "66163279ca32f3b75d88ea0f"
+      },
+      {
+        "name": "role",
+        "label": "角色",
+        "ptype": "String",
+        "visible": true,
+        "remark": "权限系统标识",
+        "_id": "6628c95b45ba4eb2d3ccde27"
+      }
+    ],
+    "form": {
+      "title": "新增/编辑",
+      "width": 50,
+      "labelWidth": 4,
+      "labelAlign": "right",
+      "fields": [
+        {
+          "label": "账户名",
+          "desc": "",
+          "ftype": "Input",
+          "rules": [],
+          "refer": "username",
+          "placeholder": "",
+          "extra": {},
+          "_id": "66163279ca32f3b75d88ea16"
+        },
+        {
+          "label": "密码",
+          "desc": "",
+          "ftype": "Password",
+          "rules": [],
+          "refer": "password",
+          "placeholder": "",
+          "extra": {},
+          "_id": "66163279ca32f3b75d88ea17"
+        },
+        {
+          "label": "填入槽",
+          "desc": "",
+          "ftype": "EditList",
+          "rules": [],
+          "refer": "values",
+          "placeholder": "",
+          "extra": {},
+          "_id": "66163279ca32f3b75d88ea18"
+        }
+      ],
+      "_id": "66163279ca32f3b75d88ea15"
+    },
+    "table": {
+      "title": "数据表",
+      "desc": "",
+      "operaStyle": "button",
+      "size": "default",
+      "hasPages": true,
+      "maxPerPgs": 10,
+      "refresh": [],
+      "operable": [],
+      "expandURL": "",
+      "expHeight": -1,
+      "colDspable": false,
+      "imExport": [],
+      "columns": [
+        {
+          "title": "账户名",
+          "dataIndex": "username",
+          "group": [],
+          "align": "left",
+          "searchable": false,
+          "filterable": false,
+          "notDisplay": false,
+          "_id": "66163279ca32f3b75d88ea1a"
+        },
+        {
+          "title": "密码",
+          "dataIndex": "password",
+          "group": [],
+          "align": "left",
+          "searchable": false,
+          "filterable": false,
+          "notDisplay": false,
+          "_id": "66163279ca32f3b75d88ea1b"
+        },
+        {
+          "title": "填入槽",
+          "dataIndex": "values",
+          "group": [],
+          "align": "left",
+          "searchable": false,
+          "filterable": false,
+          "notDisplay": false,
+          "_id": "66163279ca32f3b75d88ea1c"
+        }
+      ],
+      "cells": [
+        {
+          "refer": "username",
+          "cdCell": {},
+          "color": "#000000",
+          "prefix": "",
+          "suffix": "",
+          "ctype": "",
+          "format": null,
+          "_id": "66163279ca32f3b75d88ea1d"
+        },
+        {
+          "refer": "password",
+          "cdCell": {},
+          "color": "#000000",
+          "prefix": "",
+          "suffix": "",
+          "ctype": "",
+          "format": null,
+          "_id": "66163279ca32f3b75d88ea1e"
+        },
+        {
+          "refer": "values",
+          "cdCell": {},
+          "color": "#000000",
+          "prefix": "",
+          "suffix": "",
+          "ctype": "",
+          "format": null,
+          "_id": "66163279ca32f3b75d88ea1f"
+        }
+      ],
+      "_id": "66163279ca32f3b75d88ea19"
+    },
+    "__v": 20
+  }
+]
