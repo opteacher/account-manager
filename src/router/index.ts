@@ -20,12 +20,14 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: `/${project.name}/home`,
     name: 'Home',
-    component: Home
+    component: Home,
+    meta: { reqLogin: true }
   },
   {
     path: `/${project.name}/:mname`,
     name: 'model',
-    component: Model
+    component: Model,
+    meta: { reqLogin: true }
   },
   {
     path: `/${project.name}/page/:pid/edit`,
@@ -34,7 +36,7 @@ const routes: Array<RouteRecordRaw> = [
     meta: { reqLogin: true }
   },
   {
-    path: '/login_platform/:mname',
+    path: '/login_platform/login',
     name: 'login',
     component: login
   },

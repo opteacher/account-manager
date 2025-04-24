@@ -29,7 +29,7 @@ function createWindow() {
   win = new BrowserWindow({
     icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
     webPreferences: {
-      preload: path.join(__dirname, 'preload.mjs'),
+      preload: path.join(__dirname, 'preload.js'),
     },
   })
 
@@ -50,10 +50,11 @@ function createWindow() {
     const chrome = JSON.parse(sChrome)
     const browser = await puppeteer.launch({
       executablePath: chrome.execPath,
+      args: ['--start-maximized'],
       headless: false
     })
     const page = await browser.newPage()
-    await page.goto(pgInfo.url)
+    await page.goto(pgInfo.url, { waitUntil: 'networkidle0' })
     
     console.log(pgInfo)
     for (const slot of pgInfo.slots) {

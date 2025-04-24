@@ -36,7 +36,7 @@ export default defineConfig({
   server: {
     proxy: {
       '^/login_platform/(mdl|api)': {
-        target: 'http://192.168.1.11:4009',
+        target: 'http://124.28.221.82:6031',
         ws: true,
         changeOrigin: true
       }

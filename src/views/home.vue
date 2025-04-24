@@ -1,8 +1,13 @@
 <template>
   <MainLayout>
-    <a-upload name="file" accept=".exe" :showUploadList="false" @change="onChromeSelect">
-      <a-button :type="chrome.execPath ? 'primary' : 'default'">指定 chrome 执行文件</a-button>
-    </a-upload>
+    <a-space>
+      <a-upload name="file" accept=".exe" :showUploadList="false" @change="onChromeSelect">
+        <a-button :type="chrome.execPath ? 'primary' : 'default'">指定 chrome 执行文件</a-button>
+      </a-upload>
+      <span>
+        {{ chrome.execPath }}
+      </span>
+    </a-space>
   </MainLayout>
 </template>
 
@@ -18,7 +23,5 @@ function onChromeSelect(e: UploadChangeParam) {
     return
   }
   chrome.execPath = e.file.originFileObj?.path as string
-  // window.ipcRenderer.invoke('launch-chrome')
-
 }
 </script>
