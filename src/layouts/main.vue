@@ -1,8 +1,8 @@
 <template>
   <a-layout class="h-full overflow-y-hidden">
     <a-layout-header class="pl-0 pr-5 flex">
-      <div class="h-full p-2.5 bg-white" style="width: 200px">
-        <div class="h-full bg-gray-300 rounded-sm" />
+      <div class="h-full p-2.5 bg-white" :style="{ width: '200px' }">
+        <div class="h-full bg-gray-300 rounded-sm hover:cursor-pointer hover:bg-gray-200" @click="() => router.push('/')" />
       </div>
       <div class="flex flex-1 leading-16 justify-between">
         <div />
@@ -18,7 +18,6 @@
     </a-layout-header>
     <a-layout class="h-full">
       <a-layout-sider
-        class="h-full flex flex-col"
         width="200"
         v-model:collapsed="collapsed"
         :trigger="null"
@@ -51,12 +50,12 @@
             <span>查看页面</span>
           </a-menu-item>
         </a-menu>
-        <a-menu>
-          <a-menu-item class="text-center" @click="() => (collapsed = !collapsed)">
+        <a-button class="w-full rounded-none" size="large" @click="() => (collapsed = !collapsed)">
+          <template #icon>
             <menu-unfold-outlined v-if="collapsed" class="text-lg" />
             <menu-fold-outlined v-else class="text-lg" />
-          </a-menu-item>
-        </a-menu>
+          </template>
+        </a-button>
       </a-layout-sider>
       <a-layout>
         <a-layout-content class="bg-gray-300 p-2.5 m-0 h-full">
@@ -68,12 +67,11 @@
 </template>
 
 <script lang="ts" setup>
-import router from '../router'
 import { SelectInfo } from 'ant-design-vue/lib/menu/src/interface'
 import { type Component, onMounted, reactive, ref } from 'vue'
 import project from '@/jsons/project.json'
 import models from '@/jsons/models.json'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import {
   UserOutlined,
   MenuUnfoldOutlined,
@@ -88,6 +86,7 @@ import * as antdIcons from '@ant-design/icons-vue/lib/icons'
 import Model from '@/types/model'
 
 const route = useRoute()
+const router = useRouter()
 const sdNavMdls = ref<Model[]>([])
 const sideKeys = reactive<string[]>([])
 const openKeys = reactive<string[]>([])
@@ -131,3 +130,10 @@ function getIconCompo(name: string): Component {
   return (antdIcons as Record<string, Component>)[name]
 }
 </script>
+
+<style>
+.ant-layout-sider-children {
+  @apply flex;
+  @apply flex-col;
+}
+</style>

@@ -7,6 +7,7 @@ import MyLib from '@lib/index'
 import './style.css'
 import { createPinia } from 'pinia'
 import axios from 'axios'
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 
 axios.interceptors.request.use(
   function (config) {
@@ -24,4 +25,7 @@ axios.interceptors.request.use(
 
 axios.defaults.baseURL = import.meta.env.PROD ? 'http://192.168.1.11:4009' : undefined
 
-createApp(App).use(router).use(Antd).use(MyLib).use(createPinia()).mount('#app')
+const pinia = createPinia()
+pinia.use(piniaPluginPersistedstate)
+
+createApp(App).use(router).use(Antd).use(MyLib).use(pinia).mount('#app')

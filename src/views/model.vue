@@ -73,6 +73,7 @@ import Page from '@/types/page'
 import { onMounted, reactive, ref, watch } from 'vue'
 import Model from '@/types/model'
 import Table from '@/types/table'
+import useChromeStore from '@/stores/chrome'
 
 const route = useRoute()
 const router = useRouter()
@@ -82,13 +83,18 @@ const table = reactive<Table>(new Table())
 const columns = ref<Column[]>([])
 const mapper = ref<Mapper>(new Mapper())
 const emitter = new Emitter()
+const chrome = useChromeStore()
 
 onMounted(refresh)
 watch(() => route.params.mname, refresh)
 
 function refresh() {
   mname.value = route.params.mname as string
-  Model.copy(models.data.find((mdl: any) => mdl.name === mname.value), model, true)
+  Model.copy(
+    models.data.find((mdl: any) => mdl.name === mname.value),
+    model,
+    true
+  )
   Table.copy(model.table, table, true)
   columns.value = table.columns.map((col: any) => Column.copy(col))
   mapper.value = createByFields(model.form.fields)
@@ -96,7 +102,11 @@ function refresh() {
   emitter.emit('refresh')
 }
 async function onLgnPgClick(pgInfo: Page) {
-  await window.ipcRenderer.invoke('puppeteer_launch', pgInfo)
+  await window.ipcRenderer.invoke(
+    'launch-chrome',
+    JSON.stringify(pgInfo),
+    JSON.stringify(chrome.$state)
+  )
 }
 </script>
 

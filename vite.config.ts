@@ -33,4 +33,18 @@ export default defineConfig({
       '@lib': fileURLToPath(new URL('./lib/src', import.meta.url))
     }
   },
+  server: {
+    proxy: {
+      '^/login_platform/(mdl|api)': {
+        target: 'http://192.168.1.11:4009',
+        ws: true,
+        changeOrigin: true
+      }
+    }
+  },
+  build: {
+    rollupOptions: {
+      external: ['puppeteer']
+    }
+  }
 })

@@ -23,7 +23,7 @@ const routes: Array<RouteRecordRaw> = [
     component: Home
   },
   {
-    path: `/${project.name}/page`,
+    path: `/${project.name}/:mname`,
     name: 'model',
     component: Model
   },

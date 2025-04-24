@@ -1,9 +1,8 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
-import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+import puppeteer from 'puppeteer'
 
-const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // The built directory structure
@@ -46,8 +45,31 @@ function createWindow() {
     win.loadFile(path.join(RENDERER_DIST, 'index.html'))
   }
 
-  ipcMain.handle('puppeteer_launch', pgInfo => {
+  ipcMain.handle('launch-chrome', async (_e, sPgInfo, sChrome) => {
+    const pgInfo = JSON.parse(sPgInfo)
+    const chrome = JSON.parse(sChrome)
+    const browser = await puppeteer.launch({
+      executablePath: chrome.execPath,
+      headless: false
+    })
+    const page = await browser.newPage()
+    await page.goto(pgInfo.url)
+    
     console.log(pgInfo)
+    for (const slot of pgInfo.slots) {
+      const ele = await page.waitForXPath(slot.xpath)
+      switch (slot.itype) {
+        case 'input':
+          await ele?.type(slot.value)
+          break
+        case 'click':
+          await ele?.click()
+          break
+      }
+      await page.waitForTimeout(1000)
+    }
+
+    browser.disconnect()
   })
 }
 
