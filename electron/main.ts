@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
-import puppeteer from 'puppeteer'
+import puppeteer from 'puppeteer-core'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 

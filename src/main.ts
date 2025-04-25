@@ -24,7 +24,9 @@ axios.interceptors.request.use(
   }
 )
 
-axios.defaults.baseURL = import.meta.env.PROD ? 'http://192.168.1.11:4009' : undefined
+axios.defaults.baseURL = import.meta.env.PROD
+  ? `http://${import.meta.env.VITE_BASE_HOST}:${import.meta.env.VITE_PJT_PORT}`
+  : undefined
 
 const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)

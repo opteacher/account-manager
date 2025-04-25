@@ -1,0 +1,11 @@
+services:
+  default:
+    image: ssh/ttyd
+    container_name: ttyd
+    restart: always
+    privileged: true
+    ports:
+      - 7681:7681
+    volumes:
+      - ./ssh.sh:/root/ssh.sh
+    command: ttyd -p 7681 -W -a bash

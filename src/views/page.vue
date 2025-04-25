@@ -19,10 +19,7 @@
             <template #prefix><RightOutlined /></template>
             <template #clearIcon><CloseCircleFilled @click="onFmUrlClear" /></template>
           </a-input>
-          <a-button
-            @click="() => onPageUpdate()"
-            :loading="collecting"
-          >
+          <a-button @click="() => onPageUpdate()" :loading="collecting">
             <template #icon><SendOutlined /></template>
             跳转
           </a-button>
@@ -36,13 +33,39 @@
           保存
         </a-button>
       </div>
-      <iframe v-if="page.form.login === 'ssh'" class="flex-1 flex mt-5" src="http://192.168.1.11:7681" />
+      <div v-if="page.form.login === 'ssh'" class="flex-1 flex mt-5">
+        <iframe v-if="curURL" class="w-full" :src="curURL" />
+        <div v-else class="w-full relative">
+          <a-typography-paragraph
+            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+          >
+            <ol>
+              <li>
+                <a-typography-text type="secondary">在【地址栏】输入主机地址和SSH端口</a-typography-text>
+              </li>
+              <li>
+                <a-typography-text type="secondary">
+                  点击【跳转】加载网页并收集网页元素
+                </a-typography-text>
+              </li>
+              <li>
+                <a-typography-text type="secondary">给登录表单的元素绑定账户信息</a-typography-text>
+              </li>
+              <li>
+                <a-typography-text type="secondary">
+                  点击【保存】绑定网页元素与账户信息
+                </a-typography-text>
+              </li>
+            </ol>
+          </a-typography-paragraph>
+        </div>
+      </div>
       <div v-else-if="page.form.login === 'web'" class="flex-1 flex mt-5">
         <div class="flex-1">
-          <a-spin v-if="curUrl" tip="页面元素收集中..." :spinning="collecting">
+          <a-spin v-if="curURL" tip="页面元素收集中..." :spinning="collecting">
             <iframe
               class="w-full h-full border-none"
-              :src="curUrl"
+              :src="curURL"
               ref="dspPage"
               @load="onPageLoad"
             />
@@ -306,7 +329,7 @@ type PageEle = {
 }
 const placeholders = {
   web: '输入网址',
-  ssh: '输入SSH地址（username:password@host:port）'
+  ssh: '输入SSH地址（host:port）'
 }
 const slotMapper = new Mapper({
   itype: {
@@ -344,7 +367,6 @@ const pageMapper = new Mapper({
     rules: [{ required: true, message: '必须填入名称！' }]
   }
 })
-
 const route = useRoute()
 const page = reactive<{
   form: Page
@@ -361,7 +383,7 @@ const page = reactive<{
   selKeys: [],
   emitter: new TinyEmitter()
 })
-const curUrl = ref('')
+const curURL = ref('')
 const operas = reactive<{
   locEleMod: boolean
   selStkColor: string
@@ -422,18 +444,41 @@ async function refresh() {
 }
 async function onPageUpdate(url?: string) {
   collecting.value = true
-  curUrl.value = url || page.form.url
-  const result = await pgAPI.colcElements(
-    curUrl.value,
-    dspPage.value?.getBoundingClientRect() as DOMRect
-  )
-  page.elMapper = Object.fromEntries(result.elements.map((el: any) => [el.xpath, el]))
-  page.treeData = result.treeData
-  page.selKeys = []
+  switch (page.form.login) {
+    case 'web':
+      {
+        curURL.value = url || page.form.url
+        const result = await pgAPI.colcElements(
+          curURL.value,
+          dspPage.value?.getBoundingClientRect() as DOMRect
+        )
+        page.elMapper = Object.fromEntries(result.elements.map((el: any) => [el.xpath, el]))
+        page.treeData = result.treeData
+        page.selKeys = []
+      }
+      break
+    case 'ssh':
+      {
+        const [_org, username, password, host, port] = /^(\w+)\:?(\w*)\@([\d|\.]+)\:?(\d*)/.exec(
+          page.form.url
+        ) as RegExpExecArray
+        const sshHost = import.meta.env.VITE_BASE_HOST
+        const sshPort = import.meta.env.VITE_SSH_PORT
+        curURL.value = [
+          `http://${sshHost}:${sshPort}/?arg=-c&arg=`,
+          password ? `sshpass%20-p${password}%20ssh` : 'ssh',
+          port ? `-p${port}` : '',
+          '-o%20StrictHostKeyChecking=no',
+          `${username}@${host}`
+        ].join('%20')
+        console.log(curURL.value)
+      }
+      break
+  }
   collecting.value = false
 }
 function onFmUrlClear() {
-  curUrl.value = ''
+  curURL.value = ''
 }
 function onLocEleClick() {
   operas.locEleMod = !operas.locEleMod
