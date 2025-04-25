@@ -33,12 +33,14 @@ export default class Page {
   url: string
   name: string
   slots: Slot[]
+  login: 'web' | 'ssh'
 
   constructor() {
     this.key = -1
     this.url = ''
     this.name = ''
     this.slots = []
+    this.login = 'web'
   }
 
   reset() {
@@ -46,6 +48,7 @@ export default class Page {
     this.url = ''
     this.name = ''
     this.slots = []
+    this.login = 'web'
   }
 
   static copy(src: any, tgt?: Page, force = false) {

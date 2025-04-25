@@ -1,35 +1,45 @@
 <template>
   <MainLayout>
-    <a-layout class="h-full">
-      <a-layout-header class="bg-white">
-        <div class="h-[64px] flex space-x-2.5 items-center">
-          <a-input-group class="flex-1 flex" compact>
-            <a-input
-              class="flex-1"
-              allowClear
-              v-model:value="page.form.url"
-              @pressEnter="onPageUpdate"
-            >
-              <template #prefix><RightOutlined /></template>
-              <template #clearIcon><CloseCircleFilled @click="onFmUrlClear" /></template>
-            </a-input>
-            <a-button @click="() => onPageUpdate()" :loading="collecting">
-              <template #icon><SendOutlined /></template>
-              跳转
-            </a-button>
-          </a-input-group>
-          <a-button
-            type="primary"
-            :disabled="collecting"
-            @click="() => page.emitter.emit('update:visible', { show: true, object: page.form })"
+    <div class="h-full flex flex-col">
+      <div class="flex space-x-2.5">
+        <a-input-group class="flex-1 flex" compact size="large">
+          <a-select
+            :options="[
+              { label: '网页登录', value: 'web' },
+              { label: '终端SSH', value: 'ssh' }
+            ]"
+            v-model:value="page.form.login"
+          />
+          <a-input
+            allowClear
+            v-model:value="page.form.url"
+            :placeholder="placeholders[page.form.login]"
+            @pressEnter="onPageUpdate"
           >
-            保存
+            <template #prefix><RightOutlined /></template>
+            <template #clearIcon><CloseCircleFilled @click="onFmUrlClear" /></template>
+          </a-input>
+          <a-button
+            @click="() => onPageUpdate()"
+            :loading="collecting"
+          >
+            <template #icon><SendOutlined /></template>
+            跳转
           </a-button>
-        </div>
-      </a-layout-header>
-      <a-layout class="space-x-3 bg-white">
-        <a-layout-content>
-          <a-spin tip="页面元素收集中..." :spinning="collecting">
+        </a-input-group>
+        <a-button
+          type="primary"
+          size="large"
+          :disabled="collecting"
+          @click="() => page.emitter.emit('update:visible', { show: true, object: page.form })"
+        >
+          保存
+        </a-button>
+      </div>
+      <iframe v-if="page.form.login === 'ssh'" class="flex-1 flex mt-5" src="http://192.168.1.11:7681" />
+      <div v-else-if="page.form.login === 'web'" class="flex-1 flex mt-5">
+        <div class="flex-1">
+          <a-spin v-if="curUrl" tip="页面元素收集中..." :spinning="collecting">
             <iframe
               class="w-full h-full border-none"
               :src="curUrl"
@@ -106,32 +116,67 @@
               </template>
             </a-dropdown>
           </a-spin>
-        </a-layout-content>
-        <a-layout-sider theme="light" :width="300" class="space-y-2">
+          <div v-else class="h-full relative">
+            <a-typography-paragraph
+              class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+            >
+              <ol>
+                <li>
+                  <a-typography-text type="secondary">登录类型选择【网页登录】</a-typography-text>
+                </li>
+                <li>
+                  <a-typography-text type="secondary">在【地址栏】输入网址</a-typography-text>
+                </li>
+                <li>
+                  <a-typography-text type="secondary">
+                    点击【跳转】加载网页并收集网页元素
+                  </a-typography-text>
+                </li>
+                <li>
+                  <a-typography-text type="secondary">
+                    给登录表单的元素绑定账户信息
+                  </a-typography-text>
+                </li>
+                <li>
+                  <a-typography-text type="secondary">
+                    点击【保存】绑定网页元素与账户信息
+                  </a-typography-text>
+                </li>
+              </ol>
+            </a-typography-paragraph>
+          </div>
+        </div>
+        <div :style="{ width: operas.sideWid + 'px' }">
           <div class="h-full flex flex-col">
             <a-space>
-              <a-button
-                :type="operas.locEleMod ? 'primary' : 'text'"
-                :disabled="collecting"
-                @click="onLocEleClick"
-              >
-                <template #icon><AimOutlined /></template>
-              </a-button>
-              <a-button
-                type="text"
-                :disabled="collecting"
-                @click="() => setProp(operas, 'stkClrVsb', true)"
-              >
-                <template #icon>
-                  <icon :style="{ color: operas.selStkColor }">
-                    <template #component>
-                      <svg width="1em" height="1em" fill="currentColor" viewBox="0 0 1024 1024">
-                        <rect :x="0" :y="0" :width="1024" :height="1024" :rx="20" :ry="20" />
-                      </svg>
-                    </template>
-                  </icon>
-                </template>
-              </a-button>
+              <a-tooltip>
+                <template #title>选择页面元素</template>
+                <a-button
+                  :type="operas.locEleMod ? 'primary' : 'text'"
+                  :disabled="collecting"
+                  @click="onLocEleClick"
+                >
+                  <template #icon><AimOutlined /></template>
+                </a-button>
+              </a-tooltip>
+              <a-tooltip>
+                <template #title>选择轮廓颜色</template>
+                <a-button
+                  type="text"
+                  :disabled="collecting"
+                  @click="() => setProp(operas, 'stkClrVsb', true)"
+                >
+                  <template #icon>
+                    <icon :style="{ color: operas.selStkColor }">
+                      <template #component>
+                        <svg width="1em" height="1em" fill="currentColor" viewBox="0 0 1024 1024">
+                          <rect :x="0" :y="0" :width="1024" :height="1024" :rx="20" :ry="20" />
+                        </svg>
+                      </template>
+                    </icon>
+                  </template>
+                </a-button>
+              </a-tooltip>
             </a-space>
             <a-spin wrapperClassName="flex-1" tip="页面元素收集中..." :spinning="collecting">
               <a-tree
@@ -163,21 +208,13 @@
                     values => Object.entries(values).map(([k, v]) => setProp(slotForm, k, v))
                   "
                 >
-                  <template #value="{ formState }">
-                    <a-input v-model:value="formState.value">
-                      <template #addonBefore>
-                        <a-button
-                          type="text"
-                          size="small"
-                          @click="() => setProp(formState, 'valEnc', !formState.valEnc)"
-                        >
-                          <template #icon>
-                            <LockOutlined v-if="formState.valEnc" />
-                            <UnlockOutlined v-else />
-                          </template>
-                        </a-button>
+                  <template #valuePFX="{ formState }">
+                    <a-button @click="() => setProp(formState, 'valEnc', !formState.valEnc)">
+                      <template #icon>
+                        <LockOutlined v-if="formState.valEnc" />
+                        <UnlockOutlined v-else />
                       </template>
-                    </a-input>
+                    </a-button>
                   </template>
                 </FormGroup>
                 <a-button class="w-full" type="primary" @click="onSlotSave">提交</a-button>
@@ -214,9 +251,9 @@
               </a-collapse-panel>
             </a-collapse>
           </div>
-        </a-layout-sider>
-      </a-layout>
-    </a-layout>
+        </div>
+      </div>
+    </div>
   </MainLayout>
   <a-modal
     v-model:open="operas.stkClrVsb"
@@ -267,6 +304,10 @@ type PageEle = {
   tagName: string
   rectBox: RectBox
 }
+const placeholders = {
+  web: '输入网址',
+  ssh: '输入SSH地址（username:password@host:port）'
+}
 const slotMapper = new Mapper({
   itype: {
     label: '填入方式',
@@ -313,7 +354,7 @@ const page = reactive<{
   selKeys: (string | number)[]
   emitter: TinyEmitter
 }>({
-  form: Page.copy({ url: 'http://192.168.1.12:8096' }),
+  form: new Page(),
   elMapper: {},
   treeData: [],
   expKeys: [],
@@ -327,12 +368,14 @@ const operas = reactive<{
   slotStkColor: string
   stkClrVsb: boolean
   actKey: string[]
+  sideWid: number
 }>({
   locEleMod: false,
   selStkColor: 'red',
   slotStkColor: 'green',
   stkClrVsb: false,
-  actKey: ['1']
+  actKey: ['1'],
+  sideWid: 300
 })
 const collecting = ref(false)
 const dspPage = ref<HTMLIFrameElement | null>(null)
