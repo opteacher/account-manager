@@ -7,6 +7,8 @@
         update: (record: any) => api.update(mname, record.key, record),
         remove: (record: any) => api.remove(mname, record.key)
       }"
+      title="@"
+      description="使用ssh登录时请确保本地系统已安装sshpass应用，Windows系统需安装Linux子系统，并在子系统中安装sshpass！"
       sclHeight="h-full"
       :columns="columns"
       :mapper="mapper"

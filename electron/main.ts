@@ -78,7 +78,6 @@ function createWindow() {
                 await ele?.click()
                 break
             }
-            await page.waitForTimeout(1000)
           }
 
           browser.disconnect()
@@ -92,26 +91,23 @@ function createWindow() {
           const pwdSlot = pgInfo.slots.find((slot: any) => slot.xpath === 'password')
           const password = pwdSlot ? pwdSlot.value : undefined
           // echo y | plink.exe -C -ssh -legacy-stdio-prompts -pw 12345 -P 2022 op@124.28.221.82
-          console.log('(echo y | ' +
-                [
-                  path.join(process.env.APP_ROOT, 'bin', 'plink.exe'),
-                  '-C -ssh -legacy-stdio-prompts',
-                  password ? `-pw ${password}` : '',
-                  `-P ${port || 22} ${username}@${host})`
-                ].join(' '))
           spawn(
             'cmd',
             [
               '/K',
-              '(echo y | ' +
-                [
-                  path.join(process.env.APP_ROOT, 'bin', 'plink.exe'),
-                  '-C -ssh -legacy-stdio-prompts',
-                  password ? `-pw ${password}` : '',
-                  `-P ${port || 22} ${username}@${host})`
-                ].join(' ')
+              'wsl',
+              [
+                'sshpass',
+                password ? `-p ${password}` : '',
+                'ssh -o StrictHostKeyChecking=no',
+                `-p ${port || 22}`,
+                `${username}@${host}`
+              ].join(' ')
             ],
-            { detached: true, shell: true }
+            {
+              detached: true,
+              shell: true
+            }
           )
         }
         break
