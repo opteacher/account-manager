@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import puppeteer from 'puppeteer-core'
+import { spawn } from 'child_process'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -21,7 +22,9 @@ export const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 export const MAIN_DIST = path.join(process.env.APP_ROOT, 'dist-electron')
 export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
 
-process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 'public') : RENDERER_DIST
+process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
+  ? path.join(process.env.APP_ROOT, 'public')
+  : RENDERER_DIST
 
 let win: BrowserWindow | null
 
@@ -29,13 +32,13 @@ function createWindow() {
   win = new BrowserWindow({
     icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-    },
+      preload: path.join(__dirname, 'preload.js')
+    }
   })
 
   // Test active push message to Renderer-process.
   win.webContents.on('did-finish-load', () => {
-    win?.webContents.send('main-process-message', (new Date).toLocaleString())
+    win?.webContents.send('main-process-message', new Date().toLocaleString())
   })
 
   if (VITE_DEV_SERVER_URL) {
@@ -45,32 +48,74 @@ function createWindow() {
     win.loadFile(path.join(RENDERER_DIST, 'index.html'))
   }
 
-  ipcMain.handle('launch-chrome', async (_e, sPgInfo, sChrome) => {
+  ipcMain.handle('login-page', async (_e, sPgInfo, sChrome) => {
     const pgInfo = JSON.parse(sPgInfo)
-    const chrome = JSON.parse(sChrome)
-    const browser = await puppeteer.launch({
-      executablePath: chrome.execPath,
-      args: ['--start-maximized'],
-      headless: false
-    })
-    const page = await browser.newPage()
-    await page.goto(pgInfo.url, { waitUntil: 'networkidle0' })
-    
-    console.log(pgInfo)
-    for (const slot of pgInfo.slots) {
-      const ele = await page.waitForXPath(slot.xpath)
-      switch (slot.itype) {
-        case 'input':
-          await ele?.type(slot.value)
-          break
-        case 'click':
-          await ele?.click()
-          break
-      }
-      await page.waitForTimeout(1000)
-    }
+    switch (pgInfo.login) {
+      case 'web':
+        {
+          const chrome = JSON.parse(sChrome)
+          const browser = await puppeteer.launch({
+            executablePath: chrome.execPath,
+            args: ['--start-maximized'],
+            headless: false
+          })
+          const pages = await browser.pages()
+          let page = null
+          if (pages.length) {
+            page = pages[0]
+          } else {
+            page = await browser.newPage()
+          }
+          await page.goto(pgInfo.url, { waitUntil: 'networkidle0' })
 
-    browser.disconnect()
+          for (const slot of pgInfo.slots) {
+            const ele = await page.waitForXPath(slot.xpath)
+            switch (slot.itype) {
+              case 'input':
+                await ele?.type(slot.value)
+                break
+              case 'click':
+                await ele?.click()
+                break
+            }
+            await page.waitForTimeout(1000)
+          }
+
+          browser.disconnect()
+        }
+        break
+      case 'ssh':
+        {
+          const [host, port] = pgInfo.url.split(':')
+          const usrSlot = pgInfo.slots.find((slot: any) => slot.xpath === 'username')
+          const username = usrSlot ? usrSlot.value : 'root'
+          const pwdSlot = pgInfo.slots.find((slot: any) => slot.xpath === 'password')
+          const password = pwdSlot ? pwdSlot.value : undefined
+          // echo y | plink.exe -C -ssh -legacy-stdio-prompts -pw 12345 -P 2022 op@124.28.221.82
+          console.log('(echo y | ' +
+                [
+                  path.join(process.env.APP_ROOT, 'bin', 'plink.exe'),
+                  '-C -ssh -legacy-stdio-prompts',
+                  password ? `-pw ${password}` : '',
+                  `-P ${port || 22} ${username}@${host})`
+                ].join(' '))
+          spawn(
+            'cmd',
+            [
+              '/K',
+              '(echo y | ' +
+                [
+                  path.join(process.env.APP_ROOT, 'bin', 'plink.exe'),
+                  '-C -ssh -legacy-stdio-prompts',
+                  password ? `-pw ${password}` : '',
+                  `-P ${port || 22} ${username}@${host})`
+                ].join(' ')
+            ],
+            { detached: true, shell: true }
+          )
+        }
+        break
+    }
   })
 }
 

@@ -100,6 +100,18 @@
         "imExport": [],
         "columns": [
           {
+            "title": "名称",
+            "dataIndex": "name",
+            "group": [],
+            "_id": "6615ec218dea0be27a5ee0d7"
+          },
+          {
+            "title": "登录类型",
+            "dataIndex": "login",
+            "group": [],
+            "_id": "XX"
+          },
+          {
             "title": "页面URL",
             "dataIndex": "url",
             "group": [],
@@ -110,12 +122,6 @@
             "dataIndex": "slots",
             "group": [],
             "_id": "6615e72a8dea0be27a5edaf7"
-          },
-          {
-            "title": "名称",
-            "dataIndex": "name",
-            "group": [],
-            "_id": "6615ec218dea0be27a5ee0d7"
           }
         ],
         "cells": [

@@ -35,12 +35,15 @@ export default class Page {
   slots: Slot[]
   login: 'web' | 'ssh'
 
-  constructor() {
+  constructor(init?: any) {
     this.key = -1
     this.url = ''
     this.name = ''
     this.slots = []
     this.login = 'web'
+    if (init) {
+      Page.copy(init, this)
+    }
   }
 
   reset() {

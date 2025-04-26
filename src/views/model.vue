@@ -103,7 +103,7 @@ function refresh() {
 }
 async function onLgnPgClick(pgInfo: Page) {
   await window.ipcRenderer.invoke(
-    'launch-chrome',
+    'login-page',
     JSON.stringify(pgInfo),
     JSON.stringify(chrome.$state)
   )

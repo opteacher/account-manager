@@ -4,11 +4,13 @@
       <div class="flex space-x-2.5">
         <a-input-group class="flex-1 flex" compact size="large">
           <a-select
+            :disabled="route.params.pid !== 'n'"
             :options="[
               { label: '网页登录', value: 'web' },
               { label: '终端SSH', value: 'ssh' }
             ]"
             v-model:value="page.form.login"
+            @change="onLgnTypeChange"
           />
           <a-input
             allowClear
@@ -17,13 +19,29 @@
             @pressEnter="onPageUpdate"
           >
             <template #prefix><RightOutlined /></template>
-            <template #clearIcon><CloseCircleFilled @click="onFmUrlClear" /></template>
+            <template #clearIcon><CloseCircleFilled @click="() => (curURL = '')" /></template>
           </a-input>
+          <a-button
+            v-if="page.form.login === 'ssh'"
+            :type="page.form.slots.length ? 'primary' : 'default'"
+            @click="() => authSSh.emitter.emit('update:visible', true)"
+          >
+            <template #icon><KeyOutlined /></template>
+            认证
+          </a-button>
           <a-button @click="() => onPageUpdate()" :loading="collecting">
             <template #icon><SendOutlined /></template>
             跳转
           </a-button>
         </a-input-group>
+        <FormDialog
+          title="SSH认证"
+          width="30vw"
+          :mapper="authMapper"
+          :emitter="authSSh.emitter"
+          :newFun="() => newOne(AuthSSH)"
+          @submit="onAuthSSHSubmit"
+        />
         <a-button
           type="primary"
           size="large"
@@ -41,7 +59,9 @@
           >
             <ol>
               <li>
-                <a-typography-text type="secondary">在【地址栏】输入主机地址和SSH端口</a-typography-text>
+                <a-typography-text type="secondary">
+                  在【地址栏】输入主机地址和SSH端口
+                </a-typography-text>
               </li>
               <li>
                 <a-typography-text type="secondary">
@@ -177,7 +197,7 @@
                 <a-button
                   :type="operas.locEleMod ? 'primary' : 'text'"
                   :disabled="collecting"
-                  @click="onLocEleClick"
+                  @click="() => setProp(operas, 'locEleMod', !operas.locEleMod)"
                 >
                   <template #icon><AimOutlined /></template>
                 </a-button>
@@ -287,12 +307,16 @@
   </a-modal>
   <FormDialog
     title="保存页面"
-    width="40vw"
+    width="30vw"
     :mapper="pageMapper"
     :emitter="page.emitter"
     :newFun="() => newOne(Page)"
     @submit="onPageSave"
-  />
+  >
+    <template #nameSFX="{ formState }">
+      <a-button @click="() => setProp(formState, 'name', formState.url)">直接使用URL命名</a-button>
+    </template>
+  </FormDialog>
 </template>
 
 <script setup lang="ts">
@@ -306,13 +330,14 @@ import Icon, {
   LockOutlined,
   UnlockOutlined,
   DeleteOutlined,
-  ExclamationCircleOutlined
+  ExclamationCircleOutlined,
+  KeyOutlined
 } from '@ant-design/icons-vue'
 import { computed, createVNode, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import pgAPI from '@/apis/page'
 import { Modal, TreeProps } from 'ant-design-vue'
 import ColorSelect from '@lib/components/ColorSelect.vue'
-import { newOne, setProp } from '@lib/utils'
+import { newOne, setProp, until } from '@lib/utils'
 import { RectBox, inRect } from '@/utils'
 import FormGroup from '@lib/components/FormGroup.vue'
 import Mapper from '@lib/types/mapper'
@@ -321,6 +346,8 @@ import { useRoute } from 'vue-router'
 import Page, { Slot } from '@/types/page'
 import FormDialog from '@lib/components/FormDialog.vue'
 import { TinyEmitter } from 'tiny-emitter'
+import { Cond } from '@lib/types'
+import AuthSSH from '@/types/authSSH'
 
 type PageEle = {
   xpath: string
@@ -328,7 +355,7 @@ type PageEle = {
   rectBox: RectBox
 }
 const placeholders = {
-  web: '输入网址',
+  web: '输入网址（必须带http或https前缀）',
   ssh: '输入SSH地址（host:port）'
 }
 const slotMapper = new Mapper({
@@ -352,7 +379,8 @@ const slotMapper = new Mapper({
   },
   value: {
     label: '填入值',
-    type: 'Input'
+    type: 'Input',
+    display: [new Cond({ key: 'itype', cmp: '!=', val: 'click' })]
   },
   valEnc: {
     label: '加密值',
@@ -367,6 +395,32 @@ const pageMapper = new Mapper({
     rules: [{ required: true, message: '必须填入名称！' }]
   }
 })
+const authMapper = new Mapper({
+  atype: {
+    type: 'Radio',
+    style: 'button',
+    options: [
+      { label: '一般认证', value: 'basic' },
+      { label: 'id文件', value: 'idfile' }
+    ]
+  },
+  username: {
+    label: '用户名',
+    type: 'Input',
+    rules: [{ required: true, message: '必须输入用户名！' }],
+    display: [Cond.create('atype', '=', 'basic')]
+  },
+  password: {
+    label: '密码',
+    type: 'Password',
+    display: [Cond.create('atype', '=', 'basic')]
+  },
+  idRsaFile: {
+    label: 'idRsa公钥文件',
+    type: 'UploadFile',
+    display: [Cond.create('atype', '=', 'idfile')]
+  }
+})
 const route = useRoute()
 const page = reactive<{
   form: Page
@@ -376,13 +430,14 @@ const page = reactive<{
   selKeys: (string | number)[]
   emitter: TinyEmitter
 }>({
-  form: new Page(),
+  form: new Page({ url: 'http://124.28.221.82:8096' }),
   elMapper: {},
   treeData: [],
   expKeys: [],
   selKeys: [],
   emitter: new TinyEmitter()
 })
+
 const curURL = ref('')
 const operas = reactive<{
   locEleMod: boolean
@@ -399,6 +454,7 @@ const operas = reactive<{
   actKey: ['1'],
   sideWid: 300
 })
+
 const collecting = ref(false)
 const dspPage = ref<HTMLIFrameElement | null>(null)
 const dspRect = reactive<{ width: number; height: number; sclWid: number; sclHgt: number }>({
@@ -414,6 +470,10 @@ const selRect = computed<RectBox>(() => {
   return page.elMapper[page.selKeys[0]].rectBox
 })
 const slotForm = reactive<Slot>(new Slot())
+
+const authSSh = reactive({
+  emitter: new TinyEmitter()
+})
 
 onMounted(refresh)
 watch(
@@ -448,6 +508,7 @@ async function onPageUpdate(url?: string) {
     case 'web':
       {
         curURL.value = url || page.form.url
+        await until(() => Promise.resolve(dspPage.value == null))
         const result = await pgAPI.colcElements(
           curURL.value,
           dspPage.value?.getBoundingClientRect() as DOMRect
@@ -459,11 +520,13 @@ async function onPageUpdate(url?: string) {
       break
     case 'ssh':
       {
-        const [_org, username, password, host, port] = /^(\w+)\:?(\w*)\@([\d|\.]+)\:?(\d*)/.exec(
-          page.form.url
-        ) as RegExpExecArray
+        const [host, port] = page.form.url.split(':')
         const sshHost = import.meta.env.VITE_BASE_HOST
         const sshPort = import.meta.env.VITE_SSH_PORT
+        const unSlot = page.form.slots.find(slot => slot.xpath === 'username')
+        const username = unSlot ? unSlot.value : 'root'
+        const pwdSlot = page.form.slots.find(slot => slot.xpath === 'password')
+        const password = pwdSlot ? pwdSlot.value : undefined
         curURL.value = [
           `http://${sshHost}:${sshPort}/?arg=-c&arg=`,
           password ? `sshpass%20-p${password}%20ssh` : 'ssh',
@@ -476,12 +539,6 @@ async function onPageUpdate(url?: string) {
       break
   }
   collecting.value = false
-}
-function onFmUrlClear() {
-  curURL.value = ''
-}
-function onLocEleClick() {
-  operas.locEleMod = !operas.locEleMod
 }
 function onPageLoad() {
   try {
@@ -559,9 +616,8 @@ function onSlotSave() {
   page.selKeys = []
 }
 async function onPageSave({ name }: { name: string }, next: Function) {
-  console.log(name)
   page.form.name = name
-  if (route.params.pid) {
+  if (route.params.pid !== 'n') {
     await mdlAPI.update('page', route.params.pid, page.form)
   } else {
     await mdlAPI.add('page', page.form)
@@ -586,6 +642,40 @@ function onRgtMnuClick({ key }: { key: 'check' | 'clear' }) {
   if (key === 'clear') {
     page.selKeys = []
   }
+}
+function onLgnTypeChange() {
+  page.form.url = ''
+  curURL.value = ''
+}
+function onAuthSSHSubmit(authSSH: AuthSSH, next: Function) {
+  page.form.slots = []
+  switch (authSSH.atype) {
+    case 'basic':
+      page.form.slots.push(
+        Slot.copy({
+          xpath: 'username',
+          value: authSSH.username,
+          valEnc: false
+        })
+      )
+      page.form.slots.push(
+        Slot.copy({
+          xpath: 'password',
+          value: authSSH.password,
+          valEnc: true
+        })
+      )
+      break
+    case 'idfile':
+      page.form.slots.push(
+        Slot.copy({
+          xpath: 'idRsaFile',
+          value: authSSH.idRsaFile
+        })
+      )
+      break
+  }
+  next()
 }
 </script>
 
