@@ -2,7 +2,7 @@
   <MainLayout>
     <EditableTable
       :api="{
-        all: () => api.all(mname),
+        all: () => api.all(mname, { copy: copies[mname] }),
         add: (record: any) => api.add(mname, record),
         update: (record: any) => api.update(mname, record.key, record),
         remove: (record: any) => api.remove(mname, record.key)
@@ -76,6 +76,7 @@ import { onMounted, reactive, ref, watch } from 'vue'
 import Model from '@/types/model'
 import Table from '@/types/table'
 import useChromeStore from '@/stores/chrome'
+import { copies } from '@/types/index'
 
 const route = useRoute()
 const router = useRouter()
