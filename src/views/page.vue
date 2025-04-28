@@ -223,11 +223,7 @@ async function onPageUpdate() {
 }
 async function onPageSave({ name }: { name: string }, next: Function) {
   page.form.name = name
-  if (route.params.pid !== 'n') {
-    await mdlAPI.update('page', route.params.pid, page.form)
-  } else {
-    await mdlAPI.add('page', page.form)
-  }
+  await mdlAPI.update('page', route.params.pid || 'n', page.form, { type: 'api' })
   page.form.reset()
   next()
   await refresh()
