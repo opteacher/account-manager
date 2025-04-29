@@ -157,7 +157,7 @@ const page = reactive<{
   locEleMod: boolean
   emitter: TinyEmitter
 }>({
-  form: new Page({ url: 'http://124.28.221.82:8096' }),
+  form: Page.copy({ url: 'http://124.28.221.82:8096' }),
   collecting: false,
   curURL: '',
   eleDict: {},
@@ -182,6 +182,11 @@ async function refresh() {
   }
   const pgInf = await mdlAPI.get('page', route.params.pid)
   Page.copy(pgInf, page.form, true)
+  for (const slot of page.form.slots) {
+    if (slot.valEnc) {
+      slot.value = await window.ipcRenderer.invoke('decode-value', JSON.stringify(slot.value))
+    }
+  }
   await onPageUpdate()
 }
 async function onPageUpdate() {

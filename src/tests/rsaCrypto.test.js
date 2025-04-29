@@ -26,7 +26,7 @@ const encrypt = crypto.privateEncrypt(
   Buffer.from('This is a secret message')
 )
 
-console.log('Encrypted Private Key:', encrypt.toString('base64'))
+console.log('Encrypted Private Key:', JSON.stringify(encrypt))
 
 // decrypt the private key with the passphrase
 const decrypt = crypto.publicDecrypt(publicKey, encrypt).toString('utf8')

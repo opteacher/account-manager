@@ -96,7 +96,7 @@
         "size": "default",
         "hasPages": true,
         "refresh": [],
-        "operable": ["可编辑", "可删除"],
+        "operable": ["可增加", "可编辑", "可删除"],
         "imExport": [],
         "columns": [
           {

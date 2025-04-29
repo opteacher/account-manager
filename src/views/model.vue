@@ -22,8 +22,9 @@
       :addable="table.operable.includes('可增加')"
       :delable="table.operable.includes('可删除')"
       :clkable="false"
+      @refresh="onRecordsRefresh"
       @add="() => router.push(`/${project.name}/page/n/edit`)"
-      @edit="(record: any) => router.push(`/${project.name}/page/${record.id}/edit`)"
+      @edit="(record: any) => router.push(`/${project.name}/page/${record.key}/edit`)"
     >
       <template v-if="route.path === `/${project.name}/page`" #slots="{ record }">
         <a-table
@@ -110,6 +111,19 @@ async function onLgnPgClick(pgInfo: Page) {
     JSON.stringify(pgInfo),
     JSON.stringify(chrome.$state)
   )
+}
+async function onRecordsRefresh(records: any[], pcsFun: (pcsData: any) => void) {
+  for (let record of records) {
+    record.slots = await Promise.all(
+      record.slots.map(async (slot: any) => {
+        if (slot.valEnc) {
+          slot.value = await window.ipcRenderer.invoke('decode-value', JSON.stringify(slot.value))
+        }
+        return slot
+      })
+    )
+  }
+  pcsFun(records)
 }
 </script>
 
