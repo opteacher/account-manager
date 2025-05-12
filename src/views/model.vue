@@ -117,7 +117,11 @@ async function onRecordsRefresh(records: any[], pcsFun: (pcsData: any) => void) 
     record.slots = await Promise.all(
       record.slots.map(async (slot: any) => {
         if (slot.valEnc) {
-          slot.value = await window.ipcRenderer.invoke('decode-value', JSON.stringify(slot.value))
+          slot.value = await window.ipcRenderer.invoke(
+            'decode-value',
+            localStorage.getItem('token'),
+            JSON.stringify(slot.value)
+          )
         }
         return slot
       })

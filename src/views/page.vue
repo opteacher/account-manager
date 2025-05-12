@@ -184,7 +184,11 @@ async function refresh() {
   Page.copy(pgInf, page.form, true)
   for (const slot of page.form.slots) {
     if (slot.valEnc) {
-      slot.value = await window.ipcRenderer.invoke('decode-value', JSON.stringify(slot.value))
+      slot.value = await window.ipcRenderer.invoke(
+        'decode-value',
+        localStorage.getItem('token'),
+        JSON.stringify(slot.value)
+      )
     }
   }
   await onPageUpdate()

@@ -4,7 +4,7 @@ import path from 'node:path'
 import puppeteer from 'puppeteer-core'
 import { spawn } from 'child_process'
 import crypto from 'node:crypto'
-import { readFileSync } from 'node:fs'
+import axios from 'axios'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -30,8 +30,6 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
 
 let win: BrowserWindow | null
 
-const pubKey = readFileSync(path.join(process.env.APP_ROOT, 'crt', 'lgn_pltfm.pub'), 'utf-8')
-
 function createWindow() {
   win = new BrowserWindow({
     icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
@@ -54,7 +52,6 @@ function createWindow() {
 
   ipcMain.handle('login-page', async (_e, sPgInfo, sChrome) => {
     const pgInfo = JSON.parse(sPgInfo)
-    console.log(pgInfo.slots)
     switch (pgInfo.login) {
       case 'web':
         {
@@ -118,8 +115,17 @@ function createWindow() {
         break
     }
   })
-  ipcMain.handle('decode-value', (_e, buf) => {
-    return crypto.publicDecrypt(pubKey, Buffer.from(JSON.parse(buf))).toString('utf8')
+  ipcMain.handle('decode-value', async (_e, tkn, buf) => {
+    const resp = await axios.get(`/${import.meta.env.VITE_PJT}/api/v1/account/public-key`, {
+      baseURL: `http://${import.meta.env.VITE_BASE_HOST}:${import.meta.env.VITE_PJT_PORT}`,
+      headers: { Authorization: 'Bearer ' + tkn }
+    })
+    if (resp.status !== 200) {
+      throw new Error(resp.statusText + JSON.stringify(resp.data))
+    }
+    return crypto
+      .publicDecrypt(Buffer.from(resp.data.result), Buffer.from(JSON.parse(buf)))
+      .toString('utf8')
   })
 }
 
