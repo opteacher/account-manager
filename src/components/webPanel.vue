@@ -1,7 +1,7 @@
 <template>
   <div class="flex-1">
     <a-spin v-if="curURL" tip="页面元素收集中..." :spinning="collecting">
-      <iframe class="w-full h-full border-none" :src="curURL" ref="dspPage" @load="onPageLoad" />
+      <webview class="w-full h-full border-none" :src="curURL" ref="dspPage" @load="onPageLoad" />
       <a-space class="z-50 rounded-md bg-gray-300 opacity-50 p-1 absolute top-5 right-5">
         <a-tooltip>
           <template #title>选择页面元素</template>
