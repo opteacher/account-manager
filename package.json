@@ -4,11 +4,13 @@
   "private": true,
   "version": "0.0.0",
   "author": {
-    "name": "opteacher"
+    "name": "opteacher",
+    "email": "opteacher@hotmail.com"
   },
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build && electron-builder",
+    "build:linux": "vue-tsc && vite build && electron-builder --x64 --linux deb tar.xz",
     "preview": "vite preview",
     "start": "electron-forge start",
     "package": "electron-forge package",

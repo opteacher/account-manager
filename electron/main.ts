@@ -92,25 +92,28 @@ function createWindow() {
           const username = usrSlot ? usrSlot.value : 'root'
           const pwdSlot = pgInfo.slots.find((slot: any) => slot.xpath === 'password')
           const password = pwdSlot ? pwdSlot.value : undefined
-          // echo y | plink.exe -C -ssh -legacy-stdio-prompts -pw 12345 -P 2022 op@124.28.221.82
-          spawn(
-            'cmd',
-            [
-              '/K',
-              'wsl',
-              [
-                'sshpass',
-                password ? `-p ${password}` : '',
-                'ssh -o StrictHostKeyChecking=no',
-                `-p ${port || 22}`,
-                `${username}@${host}`
-              ].join(' ')
-            ],
-            {
-              detached: true,
-              shell: true
-            }
-          )
+          const sshCmd = [
+            'sshpass',
+            password ? `-p ${password}` : '',
+            'ssh -o StrictHostKeyChecking=no',
+            `-p ${port || 22}`,
+            `${username}@${host}`
+          ].join(' ')
+          switch (process.platform) {
+            case 'win32':
+              // echo y | plink.exe -C -ssh -legacy-stdio-prompts -pw 12345 -P 2022 op@124.28.221.82
+              spawn('cmd', ['/K', 'wsl', sshCmd], {
+                detached: true,
+                shell: true
+              })
+              break
+            case 'linux':
+              spawn('deepin-terminal', ['-e', 'bash', '-c', `"${sshCmd}; exec bash"`], {
+                detached: true,
+                shell: true
+              })
+              break
+          }
         }
         break
     }

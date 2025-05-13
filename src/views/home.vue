@@ -1,7 +1,7 @@
 <template>
   <MainLayout>
     <a-space>
-      <a-upload name="file" accept=".exe" :showUploadList="false" @change="onChromeSelect">
+      <a-upload name="file" :showUploadList="false" @change="onChromeSelect">
         <a-button :type="chrome.execPath ? 'primary' : 'default'">指定 chrome 执行文件</a-button>
       </a-upload>
       <span>
