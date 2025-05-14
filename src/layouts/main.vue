@@ -2,7 +2,10 @@
   <a-layout class="h-full overflow-y-hidden">
     <a-layout-header class="pl-0 pr-5 flex">
       <div class="h-full p-2.5 bg-white" :style="{ width: '200px' }">
-        <div class="h-full bg-gray-300 rounded-sm hover:cursor-pointer hover:bg-gray-200" @click="() => router.push('/')" />
+        <div
+          class="h-full bg-gray-300 rounded-sm hover:cursor-pointer hover:bg-gray-200"
+          @click="() => router.push('/')"
+        />
       </div>
       <div class="flex flex-1 leading-16 justify-between">
         <div />
@@ -17,12 +20,7 @@
       </div>
     </a-layout-header>
     <a-layout class="h-full">
-      <a-layout-sider
-        width="200"
-        v-model:collapsed="collapsed"
-        :trigger="null"
-        collapsible
-      >
+      <a-layout-sider width="200" v-model:collapsed="collapsed" :trigger="null" collapsible>
         <a-menu
           :selectedKeys="sideKeys"
           :openKeys="openKeys"
@@ -94,7 +92,7 @@ const collapsed = ref(true)
 
 onMounted(async () => {
   const mdls = models.data.filter((model: any) => model.disp)
-  for (const mname of models.data.map(mdl => mdl.name)) {
+  for (const mname of mdls.map(mdl => mdl.name)) {
     try {
       await api.all(mname, { messages: { notShow: true }, axiosConfig: { params: { limit: 1 } } })
     } catch (e) {

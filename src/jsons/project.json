@@ -8,14 +8,19 @@
       "ctnr": "/app/puppeteer/chrome-linux"
     }
   ],
-  "thread": 861,
+  "thread": 10990,
   "database": "6614e93b8dea0be27a5ea938",
-  "dropDbs": false,
+  "dropDbs": true,
   "https": false,
-  "independ": false,
+  "independ": true,
   "envVars": [],
   "expPorts": [],
-  "models": ["6614eaf08dea0be27a5eaf67", "6614eb198dea0be27a5eb011"],
+  "models": [
+    "6614eaf08dea0be27a5eaf67",
+    "6614eb198dea0be27a5eb011",
+    "682228384f9475cbcdc0db09",
+    "68242da44f9475cbcdc15be1"
+  ],
   "services": [
     "6614eaf08dea0be27a5eaf72",
     "6614eaf08dea0be27a5eaf78",
@@ -25,7 +30,6 @@
     "6614eb0c8dea0be27a5eafcd",
     "6614eb0c8dea0be27a5eafd3",
     "6614eb0c8dea0be27a5eafd9",
-    "6614eb198dea0be27a5eb01c",
     "6614ee598dea0be27a5eb824",
     "6614ee598dea0be27a5eb82a",
     "6614ee598dea0be27a5eb830",
@@ -44,7 +48,18 @@
     "6628c95b45ba4eb2d3ccde29",
     "6628c95b45ba4eb2d3ccde33",
     "6628c95b45ba4eb2d3ccde3d",
-    "6667b437c8a64d4b44256d75"
+    "6667b437c8a64d4b44256d75",
+    "680de7acf1613d03170fd9ec",
+    "6820b4724516b4fcd6346325",
+    "6821d3d24f9475cbcdc0c8c7",
+    "682228384f9475cbcdc0db1c",
+    "682228384f9475cbcdc0db2a",
+    "682228384f9475cbcdc0db38",
+    "682228384f9475cbcdc0db46",
+    "68242da44f9475cbcdc15bf6",
+    "68242da44f9475cbcdc15c06",
+    "68242da44f9475cbcdc15c16",
+    "68242da44f9475cbcdc15c26"
   ],
   "typos": [],
   "auth": {
@@ -74,14 +89,6 @@
             "idens": [],
             "action": "",
             "_id": "6628c95b45ba4eb2d3ccde57"
-          },
-          {
-            "method": "POST",
-            "path": "/mdl/v1/account",
-            "value": "/",
-            "idens": [],
-            "action": "",
-            "_id": "6628c95b45ba4eb2d3ccde58"
           }
         ],
         "_id": "6628c95b45ba4eb2d3ccde56"
@@ -96,7 +103,8 @@
             "value": "*/*",
             "idens": [],
             "action": "",
-            "_id": "6628c95b45ba4eb2d3ccde5a"
+            "_id": "6628c95b45ba4eb2d3ccde5a",
+            "remark": "上线去除"
           },
           {
             "method": "ALL",
@@ -104,7 +112,8 @@
             "value": "*/*",
             "idens": [],
             "action": "",
-            "_id": "6628c95b45ba4eb2d3ccde5b"
+            "_id": "6628c95b45ba4eb2d3ccde5b",
+            "remark": "上线去除"
           },
           {
             "method": "GET",
@@ -122,9 +131,52 @@
             "action": "collect",
             "remark": "",
             "_id": "66693978c8a64d4b4425ba8e"
+          },
+          {
+            "method": "DELETE",
+            "path": "/mdl/v1/page",
+            "value": ":i",
+            "idens": [],
+            "action": "",
+            "remark": "",
+            "_id": "680da775f1613d03170fd34a"
+          },
+          {
+            "method": "PUT",
+            "path": "/api/v1/page",
+            "value": ":i",
+            "idens": [],
+            "action": "",
+            "remark": "",
+            "_id": "680eea4427585552f9b02a77"
+          },
+          {
+            "method": "GET",
+            "path": "/api/v1/account/public-key",
+            "value": "/",
+            "idens": [],
+            "action": "",
+            "remark": "",
+            "_id": "6821d5694f9475cbcdc0d4df"
           }
         ],
         "_id": "6628c95b45ba4eb2d3ccde59"
+      },
+      {
+        "name": "admin",
+        "extend": "",
+        "rules": [
+          {
+            "method": "ALL",
+            "path": "",
+            "value": "*/*",
+            "idens": [],
+            "action": "",
+            "remark": "",
+            "_id": "682293b84f9475cbcdc0ef18"
+          }
+        ],
+        "_id": "682293a64f9475cbcdc0ee02"
       }
     ],
     "apis": [],
@@ -151,9 +203,12 @@
     },
     "_id": "6614e9838dea0be27a5eac40"
   },
-  "__v": 69,
-  "logPid": 806,
+  "__v": 95,
+  "logPid": 10930,
   "nickName": "密钥登录管理平台",
   "extFiles": [],
-  "bldCmds": "sed -i \"s@http://deb.debian.org@https://mirrors.tuna.tsinghua.edu.cn@g\" /etc/apt/sources.list.d/debian.sources\napt update\napt install -y libnss3-dev libatk1.0-dev libatk-bridge2.0-dev libcups2-dev libdrm-dev libxkbcommon-dev libxcomposite-dev libxdamage-dev libxrandr-dev libgbm-dev libasound-dev"
+  "bldCmds": "apt install -y libnss3-dev libatk1.0-dev libatk-bridge2.0-dev libcups2-dev libdrm-dev libxkbcommon-dev libxcomposite-dev libxdamage-dev libxrandr-dev libgbm-dev libasound-dev",
+  "desc": "",
+  "gpus": false,
+  "runCmds": ""
 }

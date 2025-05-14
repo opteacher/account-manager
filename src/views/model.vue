@@ -26,6 +26,9 @@
       @add="() => router.push(`/${project.name}/page/n/edit`)"
       @edit="(record: any) => router.push(`/${project.name}/page/${record.key}/edit`)"
     >
+      <template v-if="route.path === `/${project.name}/endpoint`" #expandedRowRender="{ record }">
+        {{ record }}
+      </template>
       <template v-if="route.path === `/${project.name}/page`" #slots="{ record }">
         <a-table
           class="slot-table"

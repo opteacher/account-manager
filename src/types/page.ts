@@ -31,14 +31,12 @@ export class Slot {
 export default class Page {
   key: number
   url: string
-  name: string
   slots: Slot[]
   login: 'web' | 'ssh'
 
   constructor() {
     this.key = -1
     this.url = ''
-    this.name = ''
     this.slots = []
     this.login = 'web'
   }
@@ -46,7 +44,6 @@ export default class Page {
   reset() {
     this.key = -1
     this.url = ''
-    this.name = ''
     this.slots = []
     this.login = 'web'
   }

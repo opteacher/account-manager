@@ -5,14 +5,14 @@
       "name": "page",
       "label": "页面",
       "icon": "AppstoreOutlined",
-      "disp": true,
+      "disp": false,
       "desc": "",
       "logTime": true,
       "props": [
         {
           "name": "url",
           "label": "页面URL",
-          "ptype": "String",
+          "ptype": "LongStr",
           "index": false,
           "unique": false,
           "visible": true,
@@ -20,11 +20,11 @@
             "model": "",
             "belong": false,
             "isArray": false,
-            "_id": "6615e1c18dea0be27a5ed8ef"
+            "_id": "682407bd4f9475cbcdc14f8b"
           },
           "remark": "",
           "dftVal": "",
-          "_id": "6615e1c18dea0be27a5ed8ee"
+          "_id": "682407bd4f9475cbcdc14f8a"
         },
         {
           "name": "slots",
@@ -44,21 +44,21 @@
           "_id": "667986f047eceeb4e62b8c91"
         },
         {
-          "name": "name",
-          "label": "名称",
+          "name": "login",
+          "label": "登录类型",
           "ptype": "String",
-          "index": true,
+          "index": false,
           "unique": false,
           "visible": true,
           "relative": {
             "model": "",
             "belong": false,
             "isArray": false,
-            "_id": "6615ec218dea0be27a5ee0d5"
+            "_id": "680bce445fe4158d2ea3b5a3"
           },
-          "remark": "",
+          "remark": "web | ssh",
           "dftVal": "",
-          "_id": "6615ec218dea0be27a5ee0d4"
+          "_id": "680bce445fe4158d2ea3b5a2"
         }
       ],
       "form": {
@@ -81,11 +81,11 @@
             "_id": "6615e72a8dea0be27a5edaf6"
           },
           {
-            "label": "名称",
+            "label": "登录类型",
             "ftype": "Input",
             "rules": [],
-            "refer": "name",
-            "_id": "6615ec218dea0be27a5ee0d6"
+            "refer": "login",
+            "_id": "680bce445fe4158d2ea3b5a4"
           }
         ],
         "_id": "6614eaf08dea0be27a5eaf8c"
@@ -100,16 +100,10 @@
         "imExport": [],
         "columns": [
           {
-            "title": "名称",
-            "dataIndex": "name",
-            "group": [],
-            "_id": "6615ec218dea0be27a5ee0d7"
-          },
-          {
             "title": "登录类型",
             "dataIndex": "login",
             "group": [],
-            "_id": "XX"
+            "_id": "680bce445fe4158d2ea3b5a5"
           },
           {
             "title": "页面URL",
@@ -142,23 +136,23 @@
             "_id": "6615e72a8dea0be27a5edb01"
           },
           {
-            "refer": "name",
+            "refer": "login",
             "cdCell": {},
             "color": "#000000",
             "prefix": "",
             "suffix": "",
-            "_id": "6615ec218dea0be27a5ee0e5"
+            "_id": "680bce445fe4158d2ea3b5b7"
           }
         ],
         "_id": "6614eaf08dea0be27a5eaf90"
       },
-      "__v": 12
+      "__v": 15
     },
     {
       "_id": "6614eb198dea0be27a5eb011",
       "name": "account",
       "label": "管理账户",
-      "icon": "BorderlessTableOutlined",
+      "icon": "TeamOutlined",
       "disp": false,
       "desc": "",
       "logTime": true,
@@ -174,11 +168,11 @@
             "model": "",
             "belong": false,
             "isArray": false,
-            "_id": "66163279ca32f3b75d88ea0e"
+            "_id": "6820b5b24516b4fcd6346ae7"
           },
           "remark": "",
           "dftVal": "",
-          "_id": "66163279ca32f3b75d88ea0d"
+          "_id": "6820b5b24516b4fcd6346ae6"
         },
         {
           "name": "password",
@@ -191,19 +185,61 @@
             "model": "",
             "belong": false,
             "isArray": false,
-            "_id": "66163279ca32f3b75d88ea10"
+            "_id": "6820b5b24516b4fcd6346ae9"
           },
           "remark": "",
           "dftVal": "",
-          "_id": "66163279ca32f3b75d88ea0f"
+          "_id": "6820b5b24516b4fcd6346ae8"
         },
         {
           "name": "role",
           "label": "角色",
           "ptype": "String",
+          "index": false,
+          "unique": false,
           "visible": true,
+          "relative": {
+            "model": "",
+            "belong": false,
+            "isArray": false,
+            "_id": "6820b5b24516b4fcd6346aeb"
+          },
           "remark": "权限系统标识",
-          "_id": "6628c95b45ba4eb2d3ccde27"
+          "_id": "6820b5b24516b4fcd6346aea"
+        },
+        {
+          "name": "privateKey",
+          "label": "私钥",
+          "ptype": "Any",
+          "index": false,
+          "unique": false,
+          "visible": true,
+          "relative": {
+            "model": "",
+            "belong": false,
+            "isArray": false,
+            "_id": "6821b8d64f9475cbcdc0a63d"
+          },
+          "remark": "",
+          "dftVal": "",
+          "_id": "6821b8d64f9475cbcdc0a63c"
+        },
+        {
+          "name": "publicKey",
+          "label": "公钥",
+          "ptype": "Any",
+          "index": false,
+          "unique": false,
+          "visible": true,
+          "relative": {
+            "model": "",
+            "belong": false,
+            "isArray": false,
+            "_id": "6821b8dc4f9475cbcdc0a746"
+          },
+          "remark": "明码",
+          "dftVal": "",
+          "_id": "6821b8dc4f9475cbcdc0a745"
         }
       ],
       "form": {
@@ -216,34 +252,54 @@
             "label": "账户名",
             "desc": "",
             "ftype": "Input",
+            "vtype": "Unknown",
             "rules": [],
             "refer": "username",
             "placeholder": "",
+            "disabled": "false",
+            "display": "true",
+            "empty": false,
             "extra": {},
-            "_id": "66163279ca32f3b75d88ea16"
+            "_id": "6820b5b24516b4fcd6346aef"
           },
           {
             "label": "密码",
             "desc": "",
             "ftype": "Password",
+            "vtype": "Unknown",
             "rules": [],
             "refer": "password",
             "placeholder": "",
+            "disabled": "false",
+            "display": "true",
+            "empty": false,
             "extra": {},
-            "_id": "66163279ca32f3b75d88ea17"
+            "_id": "6820b5b24516b4fcd6346af0"
           },
           {
-            "label": "填入槽",
+            "label": "私钥",
             "desc": "",
-            "ftype": "EditList",
+            "ftype": "Input",
+            "vtype": "Unknown",
             "rules": [],
-            "refer": "values",
+            "refer": "privateKey",
             "placeholder": "",
+            "disabled": "false",
+            "display": false,
+            "empty": false,
             "extra": {},
-            "_id": "66163279ca32f3b75d88ea18"
+            "_id": "6820b5b24516b4fcd6346af2"
+          },
+          {
+            "label": "公钥",
+            "ftype": "Input",
+            "rules": [],
+            "refer": "publicKey",
+            "display": false,
+            "_id": "6820b70e4516b4fcd63472b2"
           }
         ],
-        "_id": "66163279ca32f3b75d88ea15"
+        "_id": "6820b5b24516b4fcd6346aee"
       },
       "table": {
         "title": "数据表",
@@ -267,7 +323,7 @@
             "searchable": false,
             "filterable": false,
             "notDisplay": false,
-            "_id": "66163279ca32f3b75d88ea1a"
+            "_id": "6820b5b24516b4fcd6346af4"
           },
           {
             "title": "密码",
@@ -277,17 +333,23 @@
             "searchable": false,
             "filterable": false,
             "notDisplay": false,
-            "_id": "66163279ca32f3b75d88ea1b"
+            "_id": "6820b5b24516b4fcd6346af5"
           },
           {
-            "title": "填入槽",
-            "dataIndex": "values",
+            "title": "私钥",
+            "dataIndex": "privateKey",
             "group": [],
             "align": "left",
             "searchable": false,
             "filterable": false,
             "notDisplay": false,
-            "_id": "66163279ca32f3b75d88ea1c"
+            "_id": "6820b5b24516b4fcd6346af7"
+          },
+          {
+            "title": "公钥",
+            "dataIndex": "publicKey",
+            "group": [],
+            "_id": "6820b70e4516b4fcd63472b3"
           }
         ],
         "cells": [
@@ -299,7 +361,7 @@
             "suffix": "",
             "ctype": "",
             "format": null,
-            "_id": "66163279ca32f3b75d88ea1d"
+            "_id": "6820b5b24516b4fcd6346af8"
           },
           {
             "refer": "password",
@@ -309,22 +371,290 @@
             "suffix": "",
             "ctype": "",
             "format": null,
-            "_id": "66163279ca32f3b75d88ea1e"
+            "_id": "6820b5b24516b4fcd6346af9"
           },
           {
-            "refer": "values",
+            "refer": "privateKey",
             "cdCell": {},
             "color": "#000000",
             "prefix": "",
             "suffix": "",
             "ctype": "",
             "format": null,
-            "_id": "66163279ca32f3b75d88ea1f"
+            "_id": "6820b5b24516b4fcd6346afb"
+          },
+          {
+            "refer": "publicKey",
+            "cdCell": {},
+            "color": "#000000",
+            "prefix": "",
+            "suffix": "",
+            "_id": "6820b70e4516b4fcd63472c9"
           }
         ],
-        "_id": "66163279ca32f3b75d88ea19"
+        "_id": "6820b5b24516b4fcd6346af3"
       },
-      "__v": 20
+      "__v": 25
+    },
+    {
+      "_id": "682228384f9475cbcdc0db09",
+      "name": "record",
+      "label": "登录记录",
+      "icon": "IdcardOutlined",
+      "disp": false,
+      "desc": "",
+      "logTime": true,
+      "props": [
+        {
+          "name": "ip",
+          "label": "登录IP",
+          "ptype": "String",
+          "index": false,
+          "unique": false,
+          "visible": true,
+          "relative": {
+            "model": "",
+            "belong": false,
+            "isArray": false,
+            "_id": "682291fd4f9475cbcdc0ea41"
+          },
+          "remark": "",
+          "dftVal": "",
+          "_id": "682291fd4f9475cbcdc0ea40"
+        },
+        {
+          "name": "fkEndpoint",
+          "label": "登录端",
+          "ptype": "Id",
+          "index": false,
+          "unique": false,
+          "visible": true,
+          "relative": {
+            "model": "page",
+            "belong": true,
+            "isArray": false,
+            "_id": "682292f74f9475cbcdc0ec66"
+          },
+          "remark": "",
+          "dftVal": "",
+          "_id": "682292f74f9475cbcdc0ec65"
+        }
+      ],
+      "form": {
+        "title": "新增/编辑",
+        "width": 50,
+        "labelWidth": 4,
+        "fields": [
+          {
+            "label": "登录IP",
+            "ftype": "Input",
+            "rules": [],
+            "refer": "ip",
+            "_id": "682291fd4f9475cbcdc0ea42"
+          },
+          {
+            "label": "登录端",
+            "ftype": "Text",
+            "rules": [],
+            "refer": "fkEndpoint",
+            "_id": "682292f74f9475cbcdc0ec67"
+          }
+        ],
+        "_id": "682228384f9475cbcdc0db56"
+      },
+      "table": {
+        "title": "数据表",
+        "operaStyle": "button",
+        "size": "default",
+        "hasPages": true,
+        "refresh": [],
+        "operable": [],
+        "imExport": [],
+        "columns": [
+          {
+            "title": "登录IP",
+            "dataIndex": "ip",
+            "group": [],
+            "_id": "682291fd4f9475cbcdc0ea43"
+          },
+          {
+            "title": "登录端",
+            "dataIndex": "fkEndpoint",
+            "group": [],
+            "_id": "682292f74f9475cbcdc0ec68"
+          }
+        ],
+        "cells": [
+          {
+            "refer": "ip",
+            "cdCell": {},
+            "color": "#000000",
+            "prefix": "",
+            "suffix": "",
+            "_id": "682291fd4f9475cbcdc0ea49"
+          },
+          {
+            "refer": "fkEndpoint",
+            "cdCell": {},
+            "color": "#000000",
+            "prefix": "",
+            "suffix": "",
+            "_id": "682292f74f9475cbcdc0ec72"
+          }
+        ],
+        "_id": "682228384f9475cbcdc0db5a"
+      },
+      "__v": 4
+    },
+    {
+      "_id": "68242da44f9475cbcdc15be1",
+      "name": "endpoint",
+      "label": "登录端",
+      "icon": "LoginOutlined",
+      "disp": true,
+      "desc": "",
+      "logTime": true,
+      "props": [
+        {
+          "name": "name",
+          "label": "名称",
+          "ptype": "String",
+          "index": true,
+          "unique": false,
+          "visible": true,
+          "relative": {
+            "model": "",
+            "belong": false,
+            "isArray": false,
+            "_id": "68242dc04f9475cbcdc15d6b"
+          },
+          "remark": "",
+          "dftVal": "",
+          "_id": "68242dc04f9475cbcdc15d6a"
+        },
+        {
+          "name": "icon",
+          "label": "图标",
+          "ptype": "String",
+          "index": false,
+          "unique": false,
+          "visible": true,
+          "relative": {
+            "model": "",
+            "belong": false,
+            "isArray": false,
+            "_id": "68242dd04f9475cbcdc15e9e"
+          },
+          "remark": "",
+          "dftVal": "",
+          "_id": "68242dd04f9475cbcdc15e9d"
+        },
+        {
+          "name": "fkPages",
+          "label": "页面",
+          "ptype": "Id",
+          "index": false,
+          "unique": false,
+          "visible": true,
+          "relative": {
+            "model": "page",
+            "belong": false,
+            "isArray": true,
+            "_id": "68242def4f9475cbcdc1614f"
+          },
+          "remark": "",
+          "dftVal": "",
+          "_id": "68242def4f9475cbcdc1614e"
+        }
+      ],
+      "form": {
+        "title": "新增/编辑",
+        "width": 50,
+        "labelWidth": 4,
+        "fields": [
+          {
+            "label": "名称",
+            "ftype": "Input",
+            "rules": [],
+            "refer": "name",
+            "_id": "68242dc04f9475cbcdc15d6c"
+          },
+          {
+            "label": "图标",
+            "ftype": "IconField",
+            "rules": [],
+            "refer": "icon",
+            "_id": "68242dd04f9475cbcdc15e9f"
+          },
+          {
+            "label": "页面",
+            "ftype": "Text",
+            "rules": [],
+            "refer": "fkPages",
+            "display": false,
+            "_id": "68242def4f9475cbcdc16150"
+          }
+        ],
+        "_id": "68242da44f9475cbcdc15c38"
+      },
+      "table": {
+        "title": "数据表",
+        "operaStyle": "button",
+        "size": "default",
+        "hasPages": true,
+        "refresh": [],
+        "operable": ["可增加", "可编辑", "可删除"],
+        "imExport": [],
+        "columns": [
+          {
+            "title": "名称",
+            "dataIndex": "name",
+            "group": [],
+            "_id": "68242dc04f9475cbcdc15d6d"
+          },
+          {
+            "title": "图标",
+            "dataIndex": "icon",
+            "group": [],
+            "_id": "68242dd04f9475cbcdc15ea0"
+          },
+          {
+            "title": "页面",
+            "dataIndex": "fkPages",
+            "notDisplay": true,
+            "group": [],
+            "_id": "68242def4f9475cbcdc16151"
+          }
+        ],
+        "cells": [
+          {
+            "refer": "name",
+            "cdCell": {},
+            "color": "#000000",
+            "prefix": "",
+            "suffix": "",
+            "_id": "68242dc04f9475cbcdc15d73"
+          },
+          {
+            "refer": "icon",
+            "cdCell": {},
+            "color": "#000000",
+            "prefix": "",
+            "suffix": "",
+            "_id": "68242dd04f9475cbcdc15eaa"
+          },
+          {
+            "refer": "fkPages",
+            "cdCell": {},
+            "color": "#000000",
+            "prefix": "",
+            "suffix": "",
+            "_id": "68242def4f9475cbcdc1615f"
+          }
+        ],
+        "_id": "68242da44f9475cbcdc15c3c"
+      },
+      "__v": 6
     }
   ]
 }

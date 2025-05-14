@@ -6,7 +6,7 @@ module.exports = {
     preflight: false
   },
   important: true,
-  content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
+  content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}', './lib/**/*.{vue,js,ts,jsx,tsx}'],
   media: false, // or 'media' or 'class'
   theme: {
     extend: {

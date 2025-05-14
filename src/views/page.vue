@@ -79,7 +79,7 @@
     width="30vw"
     :mapper="pageMapper"
     :emitter="page.emitter"
-    :newFun="() => newOne(Page)"
+    :newFun="() => newOne(Endpoint)"
     @submit="onPageSave"
   >
     <template #nameSFX="{ formState }">
@@ -95,7 +95,7 @@ import { onMounted, reactive, ref } from 'vue'
 import pgAPI from '@/apis/page'
 import { TreeProps } from 'ant-design-vue'
 import { newOne, setProp, until } from '@lib/utils'
-import Mapper from '@lib/types/mapper'
+import Mapper, { createByFields } from '@lib/types/mapper'
 import mdlAPI from '@/apis/model'
 import { useRoute } from 'vue-router'
 import Page, { Slot } from '@/types/page'
@@ -107,18 +107,17 @@ import SshPanel from '@/components/sshPanel.vue'
 import WebPanel from '@/components/webPanel.vue'
 import SlotSideBar from '@/components/slotSideBar.vue'
 import PageEle from '@/types/pageEle'
+import { data as models } from '@/jsons/models.json'
+import Field from '@lib/types/field'
+import Endpoint from '@/types/endpoint'
 
 const placeholders = {
   web: '输入网址（必须带http或https前缀）',
   ssh: '输入SSH地址（host:port）'
 }
-const pageMapper = new Mapper({
-  name: {
-    label: '名称',
-    type: 'Input',
-    rules: [{ required: true, message: '必须填入名称！' }]
-  }
-})
+const pageMapper = createByFields(
+  models.find(mdl => mdl.name === 'endpoint')?.form.fields.map(fld => Field.copy(fld)) || []
+)
 const authMapper = new Mapper({
   atype: {
     type: 'Radio',
@@ -230,8 +229,7 @@ async function onPageUpdate() {
   }
   page.collecting = false
 }
-async function onPageSave({ name }: { name: string }, next: Function) {
-  page.form.name = name
+async function onPageSave(_form: any, next: Function) {
   await mdlAPI.update('page', route.params.pid || 'n', page.form, { type: 'api' })
   page.form.reset()
   next()
