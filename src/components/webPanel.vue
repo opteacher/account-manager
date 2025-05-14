@@ -183,7 +183,6 @@ function onPageLoad() {
       doc.body.scrollHeight,
       doc.documentElement.scrollHeight
     )
-    console.log(dspRect.sclHgt)
   } catch (e) {
     console.error(e)
   }

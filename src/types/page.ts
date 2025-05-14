@@ -32,20 +32,17 @@ export default class Page {
   key: number
   url: string
   slots: Slot[]
-  login: 'web' | 'ssh'
 
   constructor() {
     this.key = -1
     this.url = ''
     this.slots = []
-    this.login = 'web'
   }
 
   reset() {
     this.key = -1
     this.url = ''
     this.slots = []
-    this.login = 'web'
   }
 
   static copy(src: any, tgt?: Page, force = false) {
@@ -55,5 +52,21 @@ export default class Page {
         slots: Slot.copy
       }
     })
+  }
+
+  async decodeSlots() {
+    this.slots = await Promise.all(
+      this.slots.map(async (slot: any) => {
+        if (slot.valEnc) {
+          slot.value = await window.ipcRenderer.invoke(
+            'decode-value',
+            localStorage.getItem('token'),
+            JSON.stringify(slot.value)
+          )
+        }
+        return slot
+      })
+    )
+    return this
   }
 }

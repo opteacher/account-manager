@@ -9,9 +9,9 @@ export default {
   all: (mname: string, options?: RequestOptions) => reqAll(mname, options),
   link: (
     mname: string,
-    mkey: string,
+    mkey: any,
     sname: string,
-    skey: string,
+    skey: any,
     link = true,
     options?: RequestOptions
   ) => reqLink({ parent: [mname, mkey], child: [sname, skey] }, link, options)

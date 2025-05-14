@@ -39,7 +39,7 @@
             </keep-alive>
             <span>{{ model.label }}</span>
           </a-menu-item>
-          <a-menu-item key="page/n/edit">
+          <a-menu-item key="endpoint/n/edit">
             <FormOutlined />
             <span>编辑页面</span>
           </a-menu-item>
@@ -110,10 +110,10 @@ router.beforeEach(to => actSideKeys(to.path))
 function actSideKeys(path: string) {
   const subPath = rmvStartsOf(path, `/${project.name}/`)
   let fixPath = subPath
-  if (/\/?page\/\d+\/edit$/.test(subPath)) {
-    fixPath = 'page/n/edit'
-  } else if (/\/?page\/\d+\/view$/.test(subPath)) {
-    fixPath = 'page/n/view'
+  if (/\/?endpoint\/\d+\/edit$/.test(subPath)) {
+    fixPath = 'endpoint/n/edit'
+  } else if (/\/?endpoint\/\d+\/view$/.test(subPath)) {
+    fixPath = 'endpoint/n/view'
   }
   sideKeys.splice(0, sideKeys.length, fixPath)
 }

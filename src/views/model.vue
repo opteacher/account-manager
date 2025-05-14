@@ -7,9 +7,10 @@
         update: (record: any) => api.update(mname, record.key, record),
         remove: (record: any) => api.remove(mname, record.key)
       }"
-      title="@"
+      :title="model.label"
       description="使用ssh登录时请确保本地系统已安装sshpass应用，Windows系统需安装Linux子系统，并在子系统中安装sshpass！"
       sclHeight="h-full"
+      :dlgWidth="model.form.width + 'vw'"
       :columns="columns"
       :mapper="mapper"
       :new-fun="() => genDftFmProps(model.props)"
@@ -23,8 +24,8 @@
       :delable="table.operable.includes('可删除')"
       :clkable="false"
       @refresh="onRecordsRefresh"
-      @add="() => router.push(`/${project.name}/page/n/edit`)"
-      @edit="(record: any) => router.push(`/${project.name}/page/${record.key}/edit`)"
+      @after-save="onRecordEdit"
+      @edit="onRecordEdit"
     >
       <template v-if="route.path === `/${project.name}/endpoint`" #expandedRowRender="{ record }">
         {{ record }}
@@ -81,6 +82,7 @@ import Model from '@/types/model'
 import Table from '@/types/table'
 import useChromeStore from '@/stores/chrome'
 import { copies } from '@/types/index'
+import Endpoint from '@/types/endpoint'
 
 const route = useRoute()
 const router = useRouter()
@@ -116,21 +118,21 @@ async function onLgnPgClick(pgInfo: Page) {
   )
 }
 async function onRecordsRefresh(records: any[], pcsFun: (pcsData: any) => void) {
-  for (let record of records) {
-    record.slots = await Promise.all(
-      record.slots.map(async (slot: any) => {
-        if (slot.valEnc) {
-          slot.value = await window.ipcRenderer.invoke(
-            'decode-value',
-            localStorage.getItem('token'),
-            JSON.stringify(slot.value)
-          )
-        }
-        return slot
-      })
-    )
+  if (mname.value === 'endpoint') {
+    for (let endpoint of records as Endpoint[]) {
+      if (!endpoint.fkPages) {
+        continue
+      }
+      await endpoint.decodeSlots()
+    }
+    pcsFun(records)
   }
-  pcsFun(records)
+}
+function onRecordEdit(record: any) {
+  if (mname.value === 'endpoint') {
+    const endpoint = Endpoint.copy(record)
+    router.push(`/${project.name}/endpoint/${endpoint.key}/edit`)
+  }
 }
 </script>
 

@@ -9,92 +9,93 @@
               { label: '网页登录', value: 'web' },
               { label: '终端SSH', value: 'ssh' }
             ]"
-            v-model:value="page.form.login"
+            v-model:value="endpoint.ins.login"
             @change="onLgnTypeChange"
           />
           <a-input
+            class="flex-1"
             allowClear
-            v-model:value="page.form.url"
-            :placeholder="placeholders[page.form.login]"
+            v-model:value="endpoint.form.url"
+            :placeholder="placeholders[endpoint.ins.login]"
             @pressEnter="onPageUpdate"
           >
             <template #prefix><RightOutlined /></template>
-            <template #clearIcon><CloseCircleFilled @click="() => (page.curURL = '')" /></template>
+            <template #clearIcon>
+              <CloseCircleFilled @click="() => (endpoint.curURL = '')" />
+            </template>
           </a-input>
           <a-button
-            v-if="page.form.login === 'ssh'"
-            :type="page.form.slots.length ? 'primary' : 'default'"
+            v-if="endpoint.ins.login === 'ssh'"
+            :type="endpoint.form.slots.length ? 'primary' : 'default'"
             @click="onAuthSshShow"
           >
             <template #icon><KeyOutlined /></template>
-            {{ page.form.slots.length ? '已认证' : '认证' }}
+            {{ endpoint.form.slots.length ? '已认证' : '认证' }}
           </a-button>
-          <a-button @click="onPageUpdate" :loading="page.collecting">
+          <a-button @click="onPageUpdate" :loading="endpoint.collecting">
             <template #icon><SendOutlined /></template>
-            {{ page.form.login === 'ssh' ? '登录' : '跳转' }}
+            {{ endpoint.ins.login === 'ssh' ? '登录' : '跳转' }}
           </a-button>
         </a-input-group>
-        <FormDialog
-          title="SSH认证"
-          width="30vw"
-          :mapper="authMapper"
-          :emitter="authSSh.emitter"
-          :newFun="() => newOne(AuthSSH)"
-          @submit="onAuthSshSubmit"
-        />
-        <a-button
-          type="primary"
-          size="large"
-          :disabled="page.collecting"
-          @click="() => page.emitter.emit('update:visible', { show: true, object: page.form })"
-        >
+        <a-button type="primary" size="large" :disabled="endpoint.collecting" @click="onPageSave">
           保存
         </a-button>
       </div>
-      <div v-if="page.form.login === 'ssh'" class="flex-1 flex mt-5">
-        <SshPanel :curURL="page.curURL" />
+      <FormDialog
+        title="SSH认证"
+        width="30vw"
+        :mapper="authMapper"
+        :emitter="authSSh.emitter"
+        :newFun="() => newOne(AuthSSH)"
+        @submit="onAuthSshSubmit"
+      />
+      <div v-if="endpoint.ins.login === 'ssh'" class="flex-1 flex mt-5">
+        <SshPanel :curURL="endpoint.curURL" />
       </div>
-      <div v-else-if="page.form.login === 'web'" class="flex-1 flex mt-5">
+      <div v-else-if="endpoint.ins.login === 'web'" class="flex-1 flex mt-5">
         <WebPanel
           ref="pageRef"
-          :curURL="page.curURL"
-          :collecting="page.collecting"
-          :form="page.form"
-          :eleDict="page.eleDict"
-          v-model:selKeys="page.selKeys"
-          v-model:locEleMod="page.locEleMod"
+          :curURL="endpoint.curURL"
+          :collecting="endpoint.collecting"
+          :form="endpoint.form"
+          :eleDict="endpoint.eleDict"
+          v-model:selKeys="endpoint.selKeys"
+          v-model:locEleMod="endpoint.locEleMod"
         />
         <SlotSideBar
-          :collecting="page.collecting"
-          :form="page.form"
-          :tree-data="page.treeData"
-          v-model:selKeys="page.selKeys"
-          v-model:locEleMod="page.locEleMod"
+          :collecting="endpoint.collecting"
+          :form="endpoint.form"
+          :tree-data="endpoint.treeData"
+          v-model:selKeys="endpoint.selKeys"
+          v-model:locEleMod="endpoint.locEleMod"
         />
       </div>
     </div>
   </MainLayout>
   <FormDialog
-    title="保存页面"
+    title="新增页面"
     width="30vw"
-    :mapper="pageMapper"
-    :emitter="page.emitter"
+    :mapper="epMapper"
+    :emitter="endpoint.emitter"
     :newFun="() => newOne(Endpoint)"
-    @submit="onPageSave"
-  >
-    <template #nameSFX="{ formState }">
-      <a-button @click="() => setProp(formState, 'name', formState.url)">直接使用URL命名</a-button>
-    </template>
-  </FormDialog>
+    @submit="onEndpointSave"
+  />
 </template>
 
 <script setup lang="ts">
 import MainLayout from '@/layouts/main.vue'
-import { SendOutlined, RightOutlined, CloseCircleFilled, KeyOutlined } from '@ant-design/icons-vue'
-import { onMounted, reactive, ref } from 'vue'
+import {
+  SendOutlined,
+  RightOutlined,
+  CloseCircleFilled,
+  KeyOutlined,
+  ExclamationCircleOutlined,
+  CheckCircleOutlined
+} from '@ant-design/icons-vue'
+import { h, onMounted, reactive, ref } from 'vue'
 import pgAPI from '@/apis/page'
-import { TreeProps } from 'ant-design-vue'
-import { newOne, setProp, until } from '@lib/utils'
+import { Button, Modal, notification, TreeProps } from 'ant-design-vue'
+import { newOne, until } from '@lib/utils'
 import Mapper, { createByFields } from '@lib/types/mapper'
 import mdlAPI from '@/apis/model'
 import { useRoute } from 'vue-router'
@@ -110,12 +111,13 @@ import PageEle from '@/types/pageEle'
 import { data as models } from '@/jsons/models.json'
 import Field from '@lib/types/field'
 import Endpoint from '@/types/endpoint'
+import { createVNode } from 'vue'
 
 const placeholders = {
   web: '输入网址（必须带http或https前缀）',
   ssh: '输入SSH地址（host:port）'
 }
-const pageMapper = createByFields(
+const epMapper = createByFields(
   models.find(mdl => mdl.name === 'endpoint')?.form.fields.map(fld => Field.copy(fld)) || []
 )
 const authMapper = new Mapper({
@@ -145,7 +147,8 @@ const authMapper = new Mapper({
   }
 })
 const route = useRoute()
-const page = reactive<{
+const endpoint = reactive<{
+  ins: Endpoint
   form: Page
   collecting: boolean
   curURL: string
@@ -155,7 +158,9 @@ const page = reactive<{
   selKeys: (string | number)[]
   locEleMod: boolean
   emitter: TinyEmitter
+  nextPage: boolean
 }>({
+  ins: new Endpoint(),
   form: Page.copy({ url: 'http://124.28.221.82:8096' }),
   collecting: false,
   curURL: '',
@@ -164,7 +169,8 @@ const page = reactive<{
   expKeys: [],
   selKeys: [],
   locEleMod: false,
-  emitter: new TinyEmitter()
+  emitter: new TinyEmitter(),
+  nextPage: false
 })
 const pageRef = ref<{ dspPage: HTMLIFrameElement | null }>({
   dspPage: null
@@ -176,48 +182,40 @@ const authSSh = reactive({
 onMounted(refresh)
 
 async function refresh() {
-  if (!route.params.pid || route.params.pid === 'n') {
+  if (!route.params.eid || route.params.eid === 'n') {
+    endpoint.emitter.emit('update:visible', true)
     return
   }
-  const pgInf = await mdlAPI.get('page', route.params.pid)
-  Page.copy(pgInf, page.form, true)
-  for (const slot of page.form.slots) {
-    if (slot.valEnc) {
-      slot.value = await window.ipcRenderer.invoke(
-        'decode-value',
-        localStorage.getItem('token'),
-        JSON.stringify(slot.value)
-      )
-    }
-  }
-  await onPageUpdate()
+  const epInf = await mdlAPI.get('endpoint', route.params.eid)
+  Endpoint.copy(epInf, endpoint.ins, true)
+  await endpoint.ins.decodeSlots()
 }
 async function onPageUpdate() {
-  page.collecting = true
-  switch (page.form.login) {
+  endpoint.collecting = true
+  switch (endpoint.ins.login) {
     case 'web':
       {
-        page.curURL = page.form.url
+        endpoint.curURL = endpoint.form.url
         await until(() => Promise.resolve(pageRef.value.dspPage == null))
         const result = await pgAPI.colcElements(
-          page.curURL,
+          endpoint.curURL,
           pageRef.value.dspPage?.getBoundingClientRect() as DOMRect
         )
-        page.eleDict = Object.fromEntries(result.elements.map((el: any) => [el.xpath, el]))
-        page.treeData = result.treeData
-        page.selKeys = []
+        endpoint.eleDict = Object.fromEntries(result.elements.map((el: any) => [el.xpath, el]))
+        endpoint.treeData = result.treeData
+        endpoint.selKeys = []
       }
       break
     case 'ssh':
       {
-        const [host, port] = page.form.url.split(':')
+        const [host, port] = endpoint.form.url.split(':')
         const sshHost = import.meta.env.VITE_BASE_HOST
         const sshPort = import.meta.env.VITE_SSH_PORT
-        const unSlot = page.form.slots.find(slot => slot.xpath === 'username')
+        const unSlot = endpoint.form.slots.find(slot => slot.xpath === 'username')
         const username = unSlot ? unSlot.value : 'root'
-        const pwdSlot = page.form.slots.find(slot => slot.xpath === 'password')
+        const pwdSlot = endpoint.form.slots.find(slot => slot.xpath === 'password')
         const password = pwdSlot ? pwdSlot.value : undefined
-        page.curURL = [
+        endpoint.curURL = [
           `http://${sshHost}:${sshPort}/?arg=-c&arg=`,
           password ? `sshpass%20-p${password}%20ssh` : 'ssh',
           port ? `-p${port}` : '',
@@ -227,31 +225,31 @@ async function onPageUpdate() {
       }
       break
   }
-  page.collecting = false
+  endpoint.collecting = false
 }
-async function onPageSave(_form: any, next: Function) {
-  await mdlAPI.update('page', route.params.pid || 'n', page.form, { type: 'api' })
-  page.form.reset()
+async function onEndpointSave(_form: any, next: Function) {
+  await mdlAPI.add('endpoint', endpoint.form)
+  endpoint.form.reset()
   next()
   await refresh()
 }
 function onLgnTypeChange(lgnType: 'ssh' | 'web') {
-  page.form.reset()
-  page.form.login = lgnType
-  page.curURL = ''
+  endpoint.form.reset()
+  endpoint.ins.login = lgnType
+  endpoint.curURL = ''
 }
 function onAuthSshSubmit(authSSH: AuthSSH, next: Function) {
-  page.form.slots = []
+  endpoint.form.slots = []
   switch (authSSH.atype) {
     case 'basic':
-      page.form.slots.push(
+      endpoint.form.slots.push(
         Slot.copy({
           xpath: 'username',
           value: authSSH.username,
           valEnc: false
         })
       )
-      page.form.slots.push(
+      endpoint.form.slots.push(
         Slot.copy({
           xpath: 'password',
           value: authSSH.password,
@@ -260,7 +258,7 @@ function onAuthSshSubmit(authSSH: AuthSSH, next: Function) {
       )
       break
     case 'idfile':
-      page.form.slots.push(
+      endpoint.form.slots.push(
         Slot.copy({
           xpath: 'idRsaFile',
           value: authSSH.idRsaFile
@@ -275,7 +273,36 @@ function onAuthSshShow() {
     show: true,
     object: {
       atype: 'basic',
-      ...Object.fromEntries(page.form.slots.map(slot => [slot.xpath, slot.value]))
+      ...Object.fromEntries(endpoint.form.slots.map(slot => [slot.xpath, slot.value]))
+    }
+  })
+}
+function onPageSave() {
+  Modal.confirm({
+    title: '确定插入该页面吗？',
+    icon: createVNode(ExclamationCircleOutlined),
+    content: createVNode('div', null, '该页面会追加到当前登录端的页面流最后'),
+    async onOk() {
+      const page = await mdlAPI.add('page', endpoint.form, { copy: Page.copy })
+      await mdlAPI.link('endpoint', endpoint.ins.key, 'fkPages', page.key)
+      const key = `open${Date.now()}`
+      notification.open({
+        icon: createVNode(CheckCircleOutlined, { style: { color: '#52c41a' } }),
+        message: createVNode('h3', null, '页面保存成功！'),
+        description: '是否立即执行页面操作并跳转到下个页面继续操作？',
+        duration: null,
+        btn: () =>
+          h(
+            Button,
+            {
+              type: 'primary',
+              onClick: () => notification.close(key)
+            },
+            { default: () => '操作并跳转' }
+          ),
+        key,
+        onClose: close
+      })
     }
   })
 }

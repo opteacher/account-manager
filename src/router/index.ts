@@ -5,7 +5,7 @@ import Model from '../views/model.vue'
 import login from '../views/login.vue'
 import project from '@/jsons/project.json'
 import Home from '../views/home.vue'
-import Page from '../views/page.vue'
+import Endpoint from '../views/endpoint.vue'
 import View from '../views/view.vue'
 
 const routes: Array<RouteRecordRaw> = [
@@ -30,9 +30,9 @@ const routes: Array<RouteRecordRaw> = [
     meta: { reqLogin: true }
   },
   {
-    path: `/${project.name}/page/:pid/edit`,
-    name: 'Page',
-    component: Page,
+    path: `/${project.name}/endpoint/:eid/edit`,
+    name: 'Endpoint',
+    component: Endpoint,
     meta: { reqLogin: true }
   },
   {

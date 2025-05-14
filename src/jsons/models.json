@@ -5,7 +5,7 @@
       "name": "page",
       "label": "页面",
       "icon": "AppstoreOutlined",
-      "disp": false,
+      "disp": true,
       "desc": "",
       "logTime": true,
       "props": [
@@ -42,23 +42,6 @@
           "remark": "xpath { string } - 页面元素\nitype { 'input' | 'select' | 'click' } - 操作方式\nvalue { string } - 填入值\nvalEnc { boolean (false) } - 加密",
           "dftVal": [],
           "_id": "667986f047eceeb4e62b8c91"
-        },
-        {
-          "name": "login",
-          "label": "登录类型",
-          "ptype": "String",
-          "index": false,
-          "unique": false,
-          "visible": true,
-          "relative": {
-            "model": "",
-            "belong": false,
-            "isArray": false,
-            "_id": "680bce445fe4158d2ea3b5a3"
-          },
-          "remark": "web | ssh",
-          "dftVal": "",
-          "_id": "680bce445fe4158d2ea3b5a2"
         }
       ],
       "form": {
@@ -79,13 +62,6 @@
             "rules": [],
             "refer": "slots",
             "_id": "6615e72a8dea0be27a5edaf6"
-          },
-          {
-            "label": "登录类型",
-            "ftype": "Input",
-            "rules": [],
-            "refer": "login",
-            "_id": "680bce445fe4158d2ea3b5a4"
           }
         ],
         "_id": "6614eaf08dea0be27a5eaf8c"
@@ -99,12 +75,6 @@
         "operable": ["可增加", "可编辑", "可删除"],
         "imExport": [],
         "columns": [
-          {
-            "title": "登录类型",
-            "dataIndex": "login",
-            "group": [],
-            "_id": "680bce445fe4158d2ea3b5a5"
-          },
           {
             "title": "页面URL",
             "dataIndex": "url",
@@ -134,14 +104,6 @@
             "prefix": "",
             "suffix": "",
             "_id": "6615e72a8dea0be27a5edb01"
-          },
-          {
-            "refer": "login",
-            "cdCell": {},
-            "color": "#000000",
-            "prefix": "",
-            "suffix": "",
-            "_id": "680bce445fe4158d2ea3b5b7"
           }
         ],
         "_id": "6614eaf08dea0be27a5eaf90"
@@ -565,17 +527,34 @@
           "remark": "",
           "dftVal": "",
           "_id": "68242def4f9475cbcdc1614e"
+        },
+        {
+          "name": "login",
+          "label": "登录类型",
+          "ptype": "String",
+          "index": false,
+          "unique": false,
+          "visible": true,
+          "relative": {
+            "model": "",
+            "belong": false,
+            "isArray": false,
+            "_id": "680bce445fe4158d2ea3b5a3"
+          },
+          "remark": "web | ssh",
+          "dftVal": "",
+          "_id": "680bce445fe4158d2ea3b5a2"
         }
       ],
       "form": {
         "title": "新增/编辑",
-        "width": 50,
+        "width": 30,
         "labelWidth": 4,
         "fields": [
           {
             "label": "名称",
             "ftype": "Input",
-            "rules": [],
+            "rules": [{ "required": true, "message": "必须给出名称" }],
             "refer": "name",
             "_id": "68242dc04f9475cbcdc15d6c"
           },
@@ -593,6 +572,19 @@
             "refer": "fkPages",
             "display": false,
             "_id": "68242def4f9475cbcdc16150"
+          },
+          {
+            "label": "登录类型",
+            "ftype": "Select",
+            "rules": [{ "required": true, "message": "必须选择登录类型" }],
+            "refer": "login",
+            "_id": "680bce445fe4158d2ea3b5a4",
+            "extra": {
+              "options": [
+                { "label": "Web", "value": "web" },
+                { "label": "SSH", "value": "ssh" }
+              ]
+            }
           }
         ],
         "_id": "68242da44f9475cbcdc15c38"
@@ -606,6 +598,12 @@
         "operable": ["可增加", "可编辑", "可删除"],
         "imExport": [],
         "columns": [
+          {
+            "title": "登录类型",
+            "dataIndex": "login",
+            "group": [],
+            "_id": "680bce445fe4158d2ea3b5a5"
+          },
           {
             "title": "名称",
             "dataIndex": "name",
@@ -650,6 +648,14 @@
             "prefix": "",
             "suffix": "",
             "_id": "68242def4f9475cbcdc1615f"
+          },
+          {
+            "refer": "login",
+            "cdCell": {},
+            "color": "#000000",
+            "prefix": "",
+            "suffix": "",
+            "_id": "680bce445fe4158d2ea3b5b7"
           }
         ],
         "_id": "68242da44f9475cbcdc15c3c"
