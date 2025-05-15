@@ -6,22 +6,22 @@ export default class Endpoint {
   name: string
   icon: string
   login: 'web' | 'ssh'
-  fkPages: (string | Page)[]
+  pages: (string | Page)[]
 
   constructor() {
     this.key = -1
     this.name = ''
     this.icon = ''
     this.login = 'web'
-    this.fkPages = []
+    this.pages = []
   }
 
   static copy(src: any, tgt?: Endpoint, force = false) {
-    tgt = gnlCpy(Endpoint, src, tgt, { force, ignProps: ['fkPages'] })
-    if (typeof src.fkPages === 'undefined') {
-      tgt.fkPages = force ? [] : tgt.fkPages
+    tgt = gnlCpy(Endpoint, src, tgt, { force, ignProps: ['pages'] })
+    if (typeof src.pages === 'undefined') {
+      tgt.pages = force ? [] : tgt.pages
     } else {
-      tgt.fkPages = src.fkPages.map((page: any) =>
+      tgt.pages = src.pages.map((page: any) =>
         typeof page === 'string' ? page : Page.copy(page)
       )
     }
@@ -29,8 +29,8 @@ export default class Endpoint {
   }
 
   async decodeSlots() {
-    this.fkPages = await Promise.all(
-      this.fkPages.map(page => (typeof page === 'string' ? page : page.decodeSlots()))
+    this.pages = await Promise.all(
+      this.pages.map(page => (typeof page === 'string' ? page : page.decodeSlots()))
     )
     return this
   }

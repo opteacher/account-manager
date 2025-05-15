@@ -1,8 +1,16 @@
 <template>
   <div class="flex-1">
     <a-spin v-if="curURL" tip="页面元素收集中..." :spinning="collecting">
-      <webview class="w-full h-full border-none" :src="curURL" ref="dspPage" @did-stop-loading="onPageLoad" />
-      <a-space class="z-50 rounded-md bg-gray-300 opacity-50 p-1 absolute bottom-5 left-5">
+      <webview
+        class="w-full h-full border-none"
+        :src="curURL"
+        ref="dspPage"
+        @did-stop-loading="onPageLoad"
+      />
+      <a-space
+        class="z-50 rounded-md p-1 absolute bottom-5 left-5"
+        :style="{ 'background-color': 'rgba(100, 100, 100, 0.5)' }"
+      >
         <a-tooltip>
           <template #title>选择页面元素</template>
           <a-button
@@ -17,24 +25,31 @@
           <template #title>选择轮廓颜色</template>
           <a-button type="text" :disabled="collecting" @click="() => (stkClrVsb = true)">
             <template #icon>
-              <icon :style="{ color: selStkColor }">
-                <template #component>
-                  <svg width="1em" height="1em" fill="currentColor" viewBox="0 0 1024 1024">
-                    <rect :x="0" :y="0" :width="1024" :height="1024" :rx="20" :ry="20" />
-                  </svg>
-                </template>
-              </icon>
+              <BorderOutlined :style="{ color: selStkColor }" />
             </template>
           </a-button>
         </a-tooltip>
         <a-modal v-model:open="stkClrVsb" title="选择框颜色" @ok="() => (stkClrVsb = false)">
           <ColorSelect v-model:color="selStkColor" />
         </a-modal>
+        <a-tooltip>
+          <template #title>关闭网页遮罩</template>
+          <a-button
+            :type="maskVsb ? 'text' : 'primary'"
+            :danger="!maskVsb"
+            :disabled="collecting"
+            @click="() => (maskVsb = !maskVsb)"
+          >
+            <template #icon>
+              <StopOutlined :class="maskVsb ? 'text-red-700' : 'text-white'" />
+            </template>
+          </a-button>
+        </a-tooltip>
       </a-space>
       <a-dropdown :trigger="['contextmenu']">
         <div
           class="absolute left-0 right-0"
-          :style="{ height: dspRect.height + 'px' }"
+          :style="{ height: dspRect.height + 'px', display: maskVsb ? 'block' : 'none' }"
           @scroll="onPageScroll"
           @mousemove="onMouseMove"
           @click="() => emit('update:locEleMod', false)"
@@ -81,7 +96,7 @@
             :class="{ invisible: selKeys.includes(slot.xpath) }"
             :style="{
               top: eleDict[slot.xpath].rectBox.y + 'px',
-              right: eleDict[slot.xpath].rectBox.x + eleDict[slot.xpath].rectBox.width + 'px'
+              left: eleDict[slot.xpath].rectBox.x + eleDict[slot.xpath].rectBox.width + 5 + 'px'
             }"
             :color="slotStkColor"
             @click="() => emit('update:selKeys', [slot.xpath])"
@@ -128,11 +143,12 @@
 <script setup lang="ts">
 import { computed, nextTick, PropType, reactive, ref } from 'vue'
 import ColorSelect from '@lib/components/ColorSelect.vue'
-import Icon, { AimOutlined } from '@ant-design/icons-vue'
+import { AimOutlined, StopOutlined, BorderOutlined } from '@ant-design/icons-vue'
 import Page from '@/types/page'
 import PageEle from '@/types/pageEle'
 import { RectBox } from '@/utils'
 import { inRect } from '@/utils'
+import { WebviewTag } from 'electron'
 
 const emit = defineEmits(['update:selKeys', 'update:locEleMod'])
 const props = defineProps({
@@ -155,10 +171,11 @@ const dspRect = reactive<{ width: number; height: number; sclWid: number; sclHgt
   sclWid: 0,
   sclHgt: 0
 })
-const dspPage = ref<HTMLIFrameElement | null>(null)
+const dspPage = ref<WebviewTag | null>(null)
 const stkClrVsb = ref(false)
 const selStkColor = ref('red')
 const slotStkColor = ref('green')
+const maskVsb = ref(true)
 defineExpose({ dspPage })
 
 function onRgtMnuClick({ key }: { key: 'check' | 'clear' }) {
@@ -170,7 +187,7 @@ function onPageLoad() {
   try {
     dspRect.width = dspPage.value?.clientWidth as number
     dspRect.height = dspPage.value?.clientHeight as number
-    const doc = dspPage.value?.contentDocument || window.document
+    const doc = window.document
     dspRect.sclWid = Math.max(
       doc.body.clientWidth,
       doc.documentElement.clientWidth,
@@ -189,7 +206,7 @@ function onPageLoad() {
 }
 function onPageScroll(e: Event) {
   nextTick(() => {
-    dspPage.value?.contentWindow?.scrollTo({
+    dspPage.value?.scrollTo({
       top: (e.target as any).scrollTop,
       behavior: 'smooth'
     })

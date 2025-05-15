@@ -132,9 +132,23 @@ function createWindow() {
       .publicDecrypt(Buffer.from(resp.data.result), Buffer.from(JSON.parse(buf)))
       .toString('utf8')
   })
+  ipcMain.handle('next-page', async () => {
+    const resp = await axios.get('http://localhost:8315/json/version')
+    if (resp.status !== 200) {
+      throw new Error(resp.statusText)
+    }
+    const browser = await puppeteer.connect({
+      browserWSEndpoint: resp.data.webSocketDebuggerUrl,
+      defaultViewport: null
+    })
+    const pages = await browser.pages()
+    console.log(pages.length)
+  })
 }
 
 app.commandLine.appendSwitch('--ignore-certificate-errors', 'true')
+
+app.commandLine.appendSwitch('remote-debugging-port', '8315')
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits

@@ -120,7 +120,7 @@ async function onLgnPgClick(pgInfo: Page) {
 async function onRecordsRefresh(records: any[], pcsFun: (pcsData: any) => void) {
   if (mname.value === 'endpoint') {
     for (let endpoint of records as Endpoint[]) {
-      if (!endpoint.fkPages) {
+      if (!endpoint.pages) {
         continue
       }
       await endpoint.decodeSlots()
@@ -131,7 +131,7 @@ async function onRecordsRefresh(records: any[], pcsFun: (pcsData: any) => void) 
 function onRecordEdit(record: any) {
   if (mname.value === 'endpoint') {
     const endpoint = Endpoint.copy(record)
-    router.push(`/${project.name}/endpoint/${endpoint.key}/edit`)
+    router.push(`/${project.name}/endpoint/${endpoint.key}/page/0/edit`)
   }
 }
 </script>

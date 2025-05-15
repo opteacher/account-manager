@@ -39,13 +39,9 @@
             </keep-alive>
             <span>{{ model.label }}</span>
           </a-menu-item>
-          <a-menu-item key="endpoint/n/edit">
+          <a-menu-item key="endpoint/n/page/0/edit">
             <FormOutlined />
             <span>编辑页面</span>
-          </a-menu-item>
-          <a-menu-item v-if="sideKeys.includes('page/n/view')" key="page/n/view">
-            <EyeOutlined />
-            <span>查看页面</span>
           </a-menu-item>
         </a-menu>
         <a-button class="w-full rounded-none" size="large" @click="() => (collapsed = !collapsed)">
@@ -75,8 +71,7 @@ import {
   MenuUnfoldOutlined,
   MenuFoldOutlined,
   HomeOutlined,
-  FormOutlined,
-  EyeOutlined
+  FormOutlined
 } from '@ant-design/icons-vue'
 import api from '@/apis/model'
 import { rmvStartsOf } from '@lib/utils'
@@ -110,8 +105,8 @@ router.beforeEach(to => actSideKeys(to.path))
 function actSideKeys(path: string) {
   const subPath = rmvStartsOf(path, `/${project.name}/`)
   let fixPath = subPath
-  if (/\/?endpoint\/\d+\/edit$/.test(subPath)) {
-    fixPath = 'endpoint/n/edit'
+  if (/\/?endpoint\/\d+\/page\/\d+\/edit$/.test(subPath)) {
+    fixPath = 'endpoint/n/page/0/edit'
   } else if (/\/?endpoint\/\d+\/view$/.test(subPath)) {
     fixPath = 'endpoint/n/view'
   }

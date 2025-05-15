@@ -1,46 +1,76 @@
 <template>
   <MainLayout>
     <div class="h-full flex flex-col">
-      <div class="flex space-x-2.5">
-        <a-input-group class="flex-1 flex" compact size="large">
-          <a-select
-            :disabled="route.params.pid !== 'n'"
-            :options="[
-              { label: '网页登录', value: 'web' },
-              { label: '终端SSH', value: 'ssh' }
-            ]"
-            v-model:value="endpoint.ins.login"
-            @change="onLgnTypeChange"
-          />
-          <a-input
-            class="flex-1"
-            allowClear
-            v-model:value="endpoint.form.url"
-            :placeholder="placeholders[endpoint.ins.login]"
-            @pressEnter="onPageUpdate"
-          >
-            <template #prefix><RightOutlined /></template>
-            <template #clearIcon>
-              <CloseCircleFilled @click="() => (endpoint.curURL = '')" />
-            </template>
-          </a-input>
-          <a-button
-            v-if="endpoint.ins.login === 'ssh'"
-            :type="endpoint.form.slots.length ? 'primary' : 'default'"
-            @click="onAuthSshShow"
-          >
-            <template #icon><KeyOutlined /></template>
-            {{ endpoint.form.slots.length ? '已认证' : '认证' }}
-          </a-button>
-          <a-button @click="onPageUpdate" :loading="endpoint.collecting">
-            <template #icon><SendOutlined /></template>
-            {{ endpoint.ins.login === 'ssh' ? '登录' : '跳转' }}
-          </a-button>
-        </a-input-group>
-        <a-button type="primary" size="large" :disabled="endpoint.collecting" @click="onPageSave">
-          保存
-        </a-button>
-      </div>
+      <a-page-header @back="onGo2BackPage">
+        <template #title>
+          <AppstoreAddOutlined />
+          登录端&nbsp;{{ endpoint.ins.name }}
+        </template>
+        <template #backIcon>
+          <ArrowLeftOutlined v-if="pgIdx > 0" />
+        </template>
+        <template #tags>
+          <a-tag color="blue">
+            <template #icon><BorderlessTableOutlined /></template>
+            页面{{ pgIdx + 1 }}
+          </a-tag>
+        </template>
+        <template #extra>
+          <a-input-group class="flex-1 flex" compact size="large">
+            <a-select
+              :disabled="route.params.pid !== 'n'"
+              :options="[
+                { label: '网页登录', value: 'web' },
+                { label: '终端SSH', value: 'ssh' }
+              ]"
+              v-model:value="endpoint.ins.login"
+              @change="onLgnTypeChange"
+            />
+            <a-input
+              class="flex-1 min-w-[30vw]"
+              allowClear
+              v-model:value="endpoint.form.url"
+              :placeholder="placeholders[endpoint.ins.login]"
+              @pressEnter="onPageUpdate"
+            >
+              <template #prefix><RightOutlined /></template>
+              <template #clearIcon>
+                <CloseCircleFilled @click="() => (endpoint.curURL = '')" />
+              </template>
+            </a-input>
+            <a-button
+              v-if="endpoint.ins.login === 'ssh'"
+              :type="endpoint.form.slots.length ? 'primary' : 'default'"
+              @click="onAuthSshShow"
+            >
+              <template #icon><KeyOutlined /></template>
+              {{ endpoint.form.slots.length ? '已认证' : '认证' }}
+            </a-button>
+            <a-button @click="onPageUpdate" :loading="endpoint.collecting">
+              <template #icon><SendOutlined /></template>
+              {{ endpoint.ins.login === 'ssh' ? '登录' : '跳转' }}
+            </a-button>
+          </a-input-group>
+          <a-input-group compact size="large">
+            <a-button
+              type="primary"
+              size="large"
+              :disabled="endpoint.collecting"
+              @click="onPageSave"
+            >
+              保存
+            </a-button>
+            <a-button
+              v-if="pgIdx < endpoint.ins.pages.length"
+              size="large"
+              :disabled="endpoint.collecting"
+              @click="onGo2NextPage"
+            >
+              下一页
+            </a-button>
+          </a-input-group>
+        </template>
+      </a-page-header>
       <FormDialog
         title="SSH认证"
         width="30vw"
@@ -90,7 +120,10 @@ import {
   CloseCircleFilled,
   KeyOutlined,
   ExclamationCircleOutlined,
-  CheckCircleOutlined
+  CheckCircleOutlined,
+  BorderlessTableOutlined,
+  ArrowLeftOutlined,
+  AppstoreAddOutlined
 } from '@ant-design/icons-vue'
 import { h, onMounted, reactive, ref } from 'vue'
 import pgAPI from '@/apis/page'
@@ -98,7 +131,7 @@ import { Button, Modal, notification, TreeProps } from 'ant-design-vue'
 import { newOne, until } from '@lib/utils'
 import Mapper, { createByFields } from '@lib/types/mapper'
 import mdlAPI from '@/apis/model'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import Page, { Slot } from '@/types/page'
 import FormDialog from '@lib/components/FormDialog.vue'
 import { TinyEmitter } from 'tiny-emitter'
@@ -112,6 +145,7 @@ import { data as models } from '@/jsons/models.json'
 import Field from '@lib/types/field'
 import Endpoint from '@/types/endpoint'
 import { createVNode } from 'vue'
+import { computed } from 'vue'
 
 const placeholders = {
   web: '输入网址（必须带http或https前缀）',
@@ -147,6 +181,7 @@ const authMapper = new Mapper({
   }
 })
 const route = useRoute()
+const router = useRouter()
 const endpoint = reactive<{
   ins: Endpoint
   form: Page
@@ -161,7 +196,7 @@ const endpoint = reactive<{
   nextPage: boolean
 }>({
   ins: new Endpoint(),
-  form: Page.copy({ url: 'http://124.28.221.82:8096' }),
+  form: Page.copy({ url: 'https://www.msn.cn/zh-cn' }),
   collecting: false,
   curURL: '',
   eleDict: {},
@@ -178,6 +213,7 @@ const pageRef = ref<{ dspPage: HTMLIFrameElement | null }>({
 const authSSh = reactive({
   emitter: new TinyEmitter()
 })
+const pgIdx = computed(() => parseInt(route.params.pid as string) || 0)
 
 onMounted(refresh)
 
@@ -189,6 +225,10 @@ async function refresh() {
   const epInf = await mdlAPI.get('endpoint', route.params.eid)
   Endpoint.copy(epInf, endpoint.ins, true)
   await endpoint.ins.decodeSlots()
+  if (endpoint.ins.pages.length) {
+    Page.copy(endpoint.ins.pages[pgIdx.value], endpoint.form, true)
+    await onPageUpdate()
+  }
 }
 async function onPageUpdate() {
   endpoint.collecting = true
@@ -305,6 +345,12 @@ function onPageSave() {
       })
     }
   })
+}
+function onGo2BackPage() {
+  router.push(`/login_platform/endpoint/${endpoint.ins.key}/page/${pgIdx.value - 1}/edit`)
+}
+async function onGo2NextPage() {
+  await window.ipcRenderer.invoke('next-page')
 }
 </script>
 
