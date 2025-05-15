@@ -146,6 +146,8 @@ import Field from '@lib/types/field'
 import Endpoint from '@/types/endpoint'
 import { createVNode } from 'vue'
 import { computed } from 'vue'
+import { WebviewTag } from 'electron'
+import { nextTick } from 'vue'
 
 const placeholders = {
   web: '输入网址（必须带http或https前缀）',
@@ -207,7 +209,7 @@ const endpoint = reactive<{
   emitter: new TinyEmitter(),
   nextPage: false
 })
-const pageRef = ref<{ dspPage: HTMLIFrameElement | null }>({
+const pageRef = ref<{ dspPage: WebviewTag | null }>({
   dspPage: null
 })
 const authSSh = reactive({
@@ -350,7 +352,25 @@ function onGo2BackPage() {
   router.push(`/login_platform/endpoint/${endpoint.ins.key}/page/${pgIdx.value - 1}/edit`)
 }
 async function onGo2NextPage() {
-  await window.ipcRenderer.invoke('next-page')
+  nextTick(() => {
+    document.querySelector('#dspPage')?.addEventListener('dom-ready', async () => {
+      for (const slot of endpoint.form.slots) {
+        // switch (slot.itype) {
+        //   case 'input':
+        //     await ele?.type(slot.value)
+        //     break
+        //   case 'click':
+        //     await ele?.click()
+        //     break
+        // }
+        console.log(
+          await pageRef.value.dspPage?.executeJavaScript(
+            `document.evaluate('${slot.xpath}', document).iterateNext()`
+          )
+        )
+      }
+    })
+  })
 }
 </script>
 

@@ -2,9 +2,11 @@
   <div class="flex-1">
     <a-spin v-if="curURL" tip="页面元素收集中..." :spinning="collecting">
       <webview
+        id="dspPage"
         class="w-full h-full border-none"
         :src="curURL"
         ref="dspPage"
+        webpreferences="allowRunningInsecureContent"
         @did-stop-loading="onPageLoad"
       />
       <a-space
