@@ -132,7 +132,7 @@ function createWindow() {
       .publicDecrypt(Buffer.from(resp.data.result), Buffer.from(JSON.parse(buf)))
       .toString('utf8')
   })
-  ipcMain.handle('next-page', async () => {
+  ipcMain.handle('next-page', async (_e, pgInf) => {
     const resp = await axios.get('http://localhost:8315/json/version')
     if (resp.status !== 200) {
       throw new Error(resp.statusText)
@@ -142,7 +142,18 @@ function createWindow() {
       defaultViewport: null
     })
     const pages = await browser.pages()
-    console.log(pages.length)
+    const webview = await pages[0].waitForSelector('webview')
+    for (const slot of pgInf.slots) {
+      const ele = await webview?.$x(slot.xpath).then(els => els[0])
+      switch (slot.itype) {
+        case 'input':
+          await ele?.type(slot.value)
+          break
+        case 'click':
+          await ele?.click()
+          break
+      }
+    }
   })
 }
 
