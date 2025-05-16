@@ -26,36 +26,32 @@
       @refresh="onRecordsRefresh"
       @after-save="onRecordEdit"
       @edit="onRecordEdit"
+      @expand="onRecordExpand"
     >
-      <template v-if="route.path === `/${project.name}/endpoint`" #expandedRowRender="{ record }">
-        {{ record }}
+      <template
+        v-if="route.path === `/${project.name}/endpoint`"
+        #expandedRowRender="{ record: endpoint }"
+      >
+        <EditableTable
+          :api="{
+            all: () => api.get('endpoint', endpoint.key, { copy: Endpoint.copy }).then((ep: Endpoint) => ep.pages),
+            remove: (pg: Page) => api.link('endpoint', endpoint.key, 'fkPages', pg.key, false).then(() => api.remove('page', pg.key))
+          }"
+          title="页面列表"
+          :columns="pgCols"
+          :emitter="pgEmitter"
+          :new-fun="() => newOne(Page)"
+          :clkable="false"
+          @add="() => onRecordEdit(endpoint)"
+        >
+          <template #no="{ key }">{{ key }}</template>
+          <template #slots="{ record: page }">
+            <SlotsTable :record="page" />
+          </template>
+        </EditableTable>
       </template>
       <template v-if="route.path === `/${project.name}/page`" #slots="{ record }">
-        <a-table
-          class="slot-table"
-          size="small"
-          :pagination="false"
-          :columns="[
-            { title: '步骤', dataIndex: 'index' },
-            { title: 'xpath', dataIndex: 'xpath' },
-            { title: '操作类型', dataIndex: 'itype' },
-            { title: '加密值', dataIndex: 'valEnc' },
-            { title: '值', dataIndex: 'value' }
-          ]"
-          :data-source="record.slots"
-        >
-          <template #bodyCell="{ column, text, index, record }">
-            <template v-if="column.dataIndex === 'index'">
-              {{ index + 1 }}
-            </template>
-            <template v-else-if="column.dataIndex === 'valEnc'">
-              {{ text ? '加密' : '不加密' }}
-            </template>
-            <template v-else-if="column.dataIndex === 'value'">
-              {{ record.valEnc ? '●●●●●●●●' : text }}
-            </template>
-          </template>
-        </a-table>
+        <SlotsTable :record="record" />
       </template>
       <template v-if="route.path === `/${project.name}/page`" #operaBefore="{ record }">
         <a-button type="primary" size="small" @click.stop="() => onLgnPgClick(record)">
@@ -70,19 +66,21 @@
 import MainLayout from '@/layouts/main.vue'
 import models from '@/jsons/models.json'
 import { useRoute, useRouter } from 'vue-router'
-import { TinyEmitter as Emitter } from 'tiny-emitter'
+import { TinyEmitter as Emitter, TinyEmitter } from 'tiny-emitter'
 import Mapper, { createByFields } from '@lib/types/mapper'
 import api from '@/apis/model'
 import { genDftFmProps } from '@/utils'
 import Column from '@lib/types/column'
 import project from '@/jsons/project.json'
 import Page from '@/types/page'
-import { onMounted, reactive, ref, watch } from 'vue'
+import { onMounted, reactive, ref, watch, computed } from 'vue'
 import Model from '@/types/model'
 import Table from '@/types/table'
 import useChromeStore from '@/stores/chrome'
 import { copies } from '@/types/index'
 import Endpoint from '@/types/endpoint'
+import { newOne } from '@lib/utils'
+import SlotsTable from '@/components/slotsTable.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -93,6 +91,12 @@ const columns = ref<Column[]>([])
 const mapper = ref<Mapper>(new Mapper())
 const emitter = new Emitter()
 const chrome = useChromeStore()
+const pgModel = models.data.find((mdl: any) => mdl.name === 'page')
+const pgCols = computed<Column[]>(() => [
+  new Column('#', 'no', { width: 80 }),
+  ...(pgModel?.table.columns || []).map((col: any) => Column.copy(col))
+])
+const pgEmitter = new TinyEmitter()
 
 onMounted(refresh)
 watch(() => route.params.mname, refresh)
@@ -134,11 +138,9 @@ function onRecordEdit(record: any) {
     router.push(`/${project.name}/endpoint/${endpoint.key}/page/0/edit`)
   }
 }
-</script>
-
-<style>
-.slot-table .ant-table {
-  margin-block: 0 !important;
-  margin-inline: 0 !important;
+async function onRecordExpand() {
+  if (mname.value === 'endpoint') {
+    pgEmitter.emit('refresh')
+  }
 }
-</style>
+</script>

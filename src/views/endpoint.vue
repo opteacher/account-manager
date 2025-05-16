@@ -198,7 +198,7 @@ const endpoint = reactive<{
   nextPage: boolean
 }>({
   ins: new Endpoint(),
-  form: Page.copy({ url: 'https://www.msn.cn/zh-cn' }),
+  form: Page.copy({ url: 'http://124.28.221.82:8096' }),
   collecting: false,
   curURL: '',
   eleDict: {},
@@ -352,24 +352,22 @@ function onGo2BackPage() {
   router.push(`/login_platform/endpoint/${endpoint.ins.key}/page/${pgIdx.value - 1}/edit`)
 }
 async function onGo2NextPage() {
-  nextTick(() => {
-    document.querySelector('#dspPage')?.addEventListener('dom-ready', async () => {
-      for (const slot of endpoint.form.slots) {
-        // switch (slot.itype) {
-        //   case 'input':
-        //     await ele?.type(slot.value)
-        //     break
-        //   case 'click':
-        //     await ele?.click()
-        //     break
-        // }
-        console.log(
-          await pageRef.value.dspPage?.executeJavaScript(
-            `document.evaluate('${slot.xpath}', document).iterateNext()`
-          )
+  nextTick(async () => {
+    for (const slot of endpoint.form.slots) {
+      // switch (slot.itype) {
+      //   case 'input':
+      //     await ele?.type(slot.value)
+      //     break
+      //   case 'click':
+      //     await ele?.click()
+      //     break
+      // }
+      console.log(
+        await pageRef.value.dspPage?.executeJavaScript(
+          `document.evaluate('${slot.xpath}', document).iterateNext()`
         )
-      }
-    })
+      )
+    }
   })
 }
 </script>
