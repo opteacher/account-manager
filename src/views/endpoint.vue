@@ -147,7 +147,6 @@ import Endpoint from '@/types/endpoint'
 import { createVNode } from 'vue'
 import { computed } from 'vue'
 import { WebviewTag } from 'electron'
-import { nextTick } from 'vue'
 
 const placeholders = {
   web: '输入网址（必须带http或https前缀）',
@@ -325,8 +324,10 @@ function onPageSave() {
     icon: createVNode(ExclamationCircleOutlined),
     content: createVNode('div', null, '该页面会追加到当前登录端的页面流最后'),
     async onOk() {
-      const page = await mdlAPI.add('page', endpoint.form, { copy: Page.copy })
-      await mdlAPI.link('endpoint', endpoint.ins.key, 'fkPages', page.key)
+      await mdlAPI.link('endpoint', endpoint.ins.key, 'page', 'n', true, {
+        type: 'api',
+        axiosConfig: { data: endpoint.form }
+      })
       const key = `open${Date.now()}`
       notification.open({
         icon: createVNode(CheckCircleOutlined, { style: { color: '#52c41a' } }),
@@ -352,23 +353,21 @@ function onGo2BackPage() {
   router.push(`/login_platform/endpoint/${endpoint.ins.key}/page/${pgIdx.value - 1}/edit`)
 }
 async function onGo2NextPage() {
-  nextTick(async () => {
-    for (const slot of endpoint.form.slots) {
-      // switch (slot.itype) {
-      //   case 'input':
-      //     await ele?.type(slot.value)
-      //     break
-      //   case 'click':
-      //     await ele?.click()
-      //     break
-      // }
-      console.log(
-        await pageRef.value.dspPage?.executeJavaScript(
-          `document.evaluate('${slot.xpath}', document).iterateNext()`
-        )
-      )
+  if (!pageRef.value.dspPage) {
+    return
+  }
+  for (const slot of endpoint.form.slots) {
+    const ele = `document.evaluate('${slot.xpath}', document).iterateNext()`
+    switch (slot.itype) {
+      case 'input':
+        await pageRef.value.dspPage?.executeJavaScript(`${ele}.value = '${slot.value}'`)
+        break
+      case 'click':
+        await pageRef.value.dspPage?.executeJavaScript(`${ele}.click()`)
+        break
     }
-  })
+  }
+  endpoint.form.reset()
 }
 </script>
 

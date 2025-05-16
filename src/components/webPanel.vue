@@ -6,6 +6,7 @@
         class="w-full h-full border-none"
         :src="curURL"
         ref="dspPage"
+        disablewebsecurity
         webpreferences="allowRunningInsecureContent"
         @did-stop-loading="onPageLoad"
       />
