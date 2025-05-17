@@ -6,7 +6,7 @@ export default class Endpoint {
   name: string
   icon: string
   login: 'web' | 'ssh'
-  pages: (string | Page)[]
+  pages: Page[]
 
   constructor() {
     this.key = -1
@@ -17,15 +17,7 @@ export default class Endpoint {
   }
 
   static copy(src: any, tgt?: Endpoint, force = false) {
-    tgt = gnlCpy(Endpoint, src, tgt, { force, ignProps: ['pages'] })
-    if (typeof src.pages === 'undefined') {
-      tgt.pages = force ? [] : tgt.pages
-    } else {
-      tgt.pages = src.pages.map((page: any) =>
-        typeof page === 'string' ? page : Page.copy(page)
-      )
-    }
-    return tgt
+    return gnlCpy(Endpoint, src, tgt, { force, cpyMapper: { pages: Page.copy } })
   }
 
   async decodeSlots() {

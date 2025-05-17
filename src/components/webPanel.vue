@@ -21,7 +21,7 @@
             :disabled="collecting"
             @click="() => emit('update:locEleMod', !locEleMod)"
           >
-            <template #icon><AimOutlined /></template>
+            <template #icon><AimOutlined :style="{ color: 'rgba(155, 155, 155)' }" /></template>
           </a-button>
         </a-tooltip>
         <a-tooltip>

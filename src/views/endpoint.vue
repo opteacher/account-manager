@@ -339,7 +339,10 @@ function onPageSave() {
             Button,
             {
               type: 'primary',
-              onClick: () => notification.close(key)
+              onClick: async () => {
+                await onGo2NextPage()
+                notification.close(key)
+              }
             },
             { default: () => '操作并跳转' }
           ),
@@ -367,7 +370,14 @@ async function onGo2NextPage() {
         break
     }
   }
-  endpoint.form.reset()
+  console.log(JSON.stringify(endpoint.ins))
+  const result = await pgAPI.colcElements(
+    [endpoint.ins.key, endpoint.ins.pages.findIndex(pg => pg.key === endpoint.form.key)],
+    pageRef.value.dspPage?.getBoundingClientRect() as DOMRect
+  )
+  endpoint.eleDict = Object.fromEntries(result.elements.map((el: any) => [el.xpath, el]))
+  endpoint.treeData = result.treeData
+  endpoint.selKeys = []
 }
 </script>
 
