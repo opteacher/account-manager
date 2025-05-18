@@ -61,6 +61,7 @@ function createWindow() {
           const browser = await puppeteer.launch({
             executablePath: chrome.execPath,
             ignoreHTTPSErrors: true,
+            defaultViewport: null,
             args: ['--start-maximized'],
             headless: false
           })
