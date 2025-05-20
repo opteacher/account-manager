@@ -2,8 +2,9 @@ import puppeteer from 'puppeteer-core'
 // import WebSocket from 'ws'
 
 const ignTags = ['style', 'script', 'link', 'meta', 'head', 'header', 'title']
+// C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe
 const browser = await puppeteer.launch({
-  executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+  executablePath: 'C:\\Users\\shines\\AppData\\Local\\Google\\Chrome\\Application\\chrome.exe',
   headless: false,
   defaultViewport: null
   // args: ['--no-sandbox', '--disable-setuid-sandbox']
@@ -12,7 +13,7 @@ const browser = await puppeteer.launch({
 // const browser = await puppeteer.connect({ browserWSEndpoint })
 const page = await browser.newPage()
 
-const endpoint = {"key":1,"name":"hotmail","icon":"","login":"web","pages":[{"key":4,"url":"http://124.28.221.82:8096","slots":[{"key":-1,"xpath":"//*[@id=\"txtManualName\"]","itype":"input","value":"zjc","valEnc":false},{"key":-1,"xpath":"//*[@id=\"txtManualPassword\"]","itype":"input","value":"zjc","valEnc":true},{"key":-1,"xpath":"//*[@id=\"loginPage\"]/div[1]/form[1]/button[1]","itype":"click","value":"","valEnc":false}]}]}
+const endpoint = {"key":1,"name":"hotmail","icon":"","login":"web","pages":[{"key":4,"url":"http://192.168.1.11:4009/server-package/","slots":[{"key":-1,"xpath":"//*[@id=\"txtManualName\"]","itype":"input","value":"zjc","valEnc":false},{"key":-1,"xpath":"//*[@id=\"txtManualPassword\"]","itype":"input","value":"zjc","valEnc":true},{"key":-1,"xpath":"//*[@id=\"loginPage\"]/div[1]/form[1]/button[1]","itype":"click","value":"","valEnc":false}]}]}
 let pIdx = 0
 for  (const i of Array.from({ length: pIdx + 1 }, (v, k) => k)) {
   

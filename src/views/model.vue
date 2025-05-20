@@ -53,8 +53,8 @@
       <template v-if="route.path === `/${project.name}/page`" #slots="{ record }">
         <SlotsTable :record="record" />
       </template>
-      <template v-if="route.path === `/${project.name}/page`" #operaBefore="{ record }">
-        <a-button type="primary" size="small" @click.stop="() => onLgnPgClick(record)">
+      <template v-if="route.path === `/${project.name}/endpoint`" #operaBefore="{ record }">
+        <a-button type="primary" size="small" @click.stop="() => onLoginClick(record)">
           登录
         </a-button>
       </template>
@@ -79,7 +79,7 @@ import Table from '@/types/table'
 import useChromeStore from '@/stores/chrome'
 import { copies } from '@/types/index'
 import Endpoint from '@/types/endpoint'
-import { newOne } from '@lib/utils'
+import { newOne, reqGet } from '@lib/utils'
 import SlotsTable from '@/components/slotsTable.vue'
 
 const route = useRoute()
@@ -114,10 +114,12 @@ function refresh() {
   emitter.emit('update:mapper', mapper.value)
   emitter.emit('refresh')
 }
-async function onLgnPgClick(pgInfo: Page) {
+async function onLoginClick(epInfo: Endpoint) {
+  Endpoint.copy(await reqGet('endpoint', epInfo.key), epInfo)
+  await epInfo.decodeSlots()
   await window.ipcRenderer.invoke(
-    'login-page',
-    JSON.stringify(pgInfo),
+    'login-endpoint',
+    JSON.stringify(epInfo),
     JSON.stringify(chrome.$state)
   )
 }

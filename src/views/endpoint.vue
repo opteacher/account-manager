@@ -3,8 +3,46 @@
     <div class="h-full flex flex-col">
       <a-page-header @back="onGo2BackPage">
         <template #title>
-          <AppstoreAddOutlined />
-          登录端&nbsp;{{ endpoint.ins.name }}
+          <a-space>
+            <a-typography-title class="mb-0" :level="3">登录端</a-typography-title>
+            <a-form v-if="endpoint.edit" layout="inline" :model="endpoint">
+              <a-form-item
+                name="edtName"
+                :rules="[{ required: true, message: '必须输入登录端名！' }]"
+              >
+                <a-input
+                  v-model:value="endpoint.edtName"
+                  allowClear
+                  :disabled="endpoint.collecting"
+                >
+                  <template #suffix>
+                    <a-button size="small" type="link" @click="onEpTitleSave">
+                      <template #icon><CheckOutlined /></template>
+                    </a-button>
+                    <a-button
+                      size="small"
+                      type="link"
+                      danger
+                      @click="() => setProp(endpoint, 'edit', false)"
+                    >
+                      <template #icon><CloseOutlined /></template>
+                    </a-button>
+                  </template>
+                </a-input>
+              </a-form-item>
+            </a-form>
+            <a-typography-title v-else class="mb-0" :level="3">
+              {{ endpoint.ins.name }}
+            </a-typography-title>
+          </a-space>
+          <a-button
+            v-if="!endpoint.edit"
+            type="link"
+            :disabled="endpoint.collecting"
+            @click="onEpTitleChange"
+          >
+            <template #icon><EditOutlined /></template>
+          </a-button>
         </template>
         <template #backIcon>
           <ArrowLeftOutlined v-if="pgIdx > 0" />
@@ -123,12 +161,14 @@ import {
   CheckCircleOutlined,
   BorderlessTableOutlined,
   ArrowLeftOutlined,
-  AppstoreAddOutlined
+  EditOutlined,
+  CheckOutlined,
+  CloseOutlined
 } from '@ant-design/icons-vue'
 import { h, onMounted, reactive, ref } from 'vue'
 import pgAPI from '@/apis/page'
 import { Button, Modal, notification, TreeProps } from 'ant-design-vue'
-import { newOne, until } from '@lib/utils'
+import { newOne, reqPut, setProp, until } from '@lib/utils'
 import Mapper, { createByFields } from '@lib/types/mapper'
 import mdlAPI from '@/apis/model'
 import { useRoute, useRouter } from 'vue-router'
@@ -185,6 +225,8 @@ const route = useRoute()
 const router = useRouter()
 const endpoint = reactive<{
   ins: Endpoint
+  edit: boolean
+  edtName: string
   form: Page
   collecting: boolean
   curURL: string
@@ -197,6 +239,8 @@ const endpoint = reactive<{
   nextPage: boolean
 }>({
   ins: new Endpoint(),
+  edit: false,
+  edtName: '',
   form: Page.copy({ url: 'http://124.28.221.82:8096' }),
   collecting: false,
   curURL: '',
@@ -230,6 +274,7 @@ async function refresh() {
     Page.copy(endpoint.ins.pages[pgIdx.value], endpoint.form, true)
     await onPageUpdate()
   }
+  endpoint.edit = false
 }
 async function onPageUpdate() {
   endpoint.collecting = true
@@ -237,7 +282,7 @@ async function onPageUpdate() {
     case 'web':
       {
         endpoint.curURL = endpoint.form.url
-        await until(() => Promise.resolve(pageRef.value.dspPage == null))
+        await until(() => Promise.resolve(pageRef.value.dspPage !== null))
         const result = await pgAPI.colcElements(
           endpoint.curURL,
           pageRef.value.dspPage?.getBoundingClientRect() as DOMRect
@@ -370,7 +415,6 @@ async function onGo2NextPage() {
         break
     }
   }
-  console.log(JSON.stringify(endpoint.ins))
   const result = await pgAPI.colcElements(
     [endpoint.ins.key, endpoint.ins.pages.findIndex(pg => pg.key === endpoint.form.key)],
     pageRef.value.dspPage?.getBoundingClientRect() as DOMRect
@@ -378,6 +422,14 @@ async function onGo2NextPage() {
   endpoint.eleDict = Object.fromEntries(result.elements.map((el: any) => [el.xpath, el]))
   endpoint.treeData = result.treeData
   endpoint.selKeys = []
+}
+function onEpTitleChange() {
+  endpoint.edit = true
+  endpoint.edtName = endpoint.ins.name
+}
+async function onEpTitleSave() {
+  await reqPut('endpoint', endpoint.ins.key, { name: endpoint.edtName })
+  await refresh()
 }
 </script>
 

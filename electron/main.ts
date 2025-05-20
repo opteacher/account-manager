@@ -52,9 +52,9 @@ function createWindow() {
     win.loadFile(path.join(RENDERER_DIST, 'index.html'))
   }
 
-  ipcMain.handle('login-page', async (_e, sPgInfo, sChrome) => {
-    const pgInfo = JSON.parse(sPgInfo)
-    switch (pgInfo.login) {
+  ipcMain.handle('login-endpoint', async (_e, sEpInfo, sChrome) => {
+    const epInfo = JSON.parse(sEpInfo)
+    switch (epInfo.login) {
       case 'web':
         {
           const chrome = JSON.parse(sChrome)
@@ -72,25 +72,28 @@ function createWindow() {
           } else {
             page = await browser.newPage()
           }
-          await page.goto(pgInfo.url, { waitUntil: 'networkidle0' })
 
-          for (const slot of pgInfo.slots) {
-            const ele = await page.waitForXPath(slot.xpath)
-            switch (slot.itype) {
-              case 'input':
-                await ele?.type(slot.value)
-                break
-              case 'click':
-                await ele?.click()
-                break
+          for (const pgInfo of epInfo.pages) {
+            await page.goto(pgInfo.url, { waitUntil: 'networkidle0' })
+
+            for (const slot of pgInfo.slots) {
+              const ele = await page.waitForXPath(slot.xpath)
+              switch (slot.itype) {
+                case 'input':
+                  await ele?.type(slot.value)
+                  break
+                case 'click':
+                  await ele?.click()
+                  break
+              }
             }
           }
-
           browser.disconnect()
         }
         break
       case 'ssh':
         {
+          const pgInfo = epInfo.pages[0]
           const [host, port] = pgInfo.url.split(':')
           const usrSlot = pgInfo.slots.find((slot: any) => slot.xpath === 'username')
           const username = usrSlot ? usrSlot.value : 'root'
@@ -137,8 +140,6 @@ function createWindow() {
 }
 
 app.commandLine.appendSwitch('--ignore-certificate-errors', 'true')
-
-app.commandLine.appendSwitch('remote-debugging-port', '8315')
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
