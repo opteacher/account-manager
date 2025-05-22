@@ -11,6 +11,7 @@
     "dev": "vite",
     "build": "vue-tsc && vite build && electron-builder",
     "build:linux": "vue-tsc && vite build && electron-builder --x64 --linux deb tar.xz",
+    "test:puppeteer": "node src/tests/endpoint.test.js",
     "preview": "vite preview",
     "start": "electron-forge start",
     "package": "electron-forge package",

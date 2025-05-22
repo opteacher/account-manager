@@ -63,6 +63,7 @@ function createWindow() {
             ignoreHTTPSErrors: true,
             defaultViewport: null,
             args: ['--start-maximized'],
+            ignoreDefaultArgs: ['--enable-automation'],
             headless: false
           })
           const pages = await browser.pages()

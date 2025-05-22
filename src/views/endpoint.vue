@@ -258,7 +258,10 @@ const pageRef = ref<{ dspPage: WebviewTag | null }>({
 const authSSh = reactive({
   emitter: new TinyEmitter()
 })
-const pgIdx = computed(() => parseInt(route.params.pid as string) || 0)
+const pgIdx = computed(() => {
+  const pid = parseInt(route.params.pid as string)
+  return isNaN(pid) ? 0 : pid
+})
 
 onMounted(refresh)
 
@@ -284,7 +287,7 @@ async function onPageUpdate() {
         endpoint.curURL = endpoint.form.url
         await until(() => Promise.resolve(pageRef.value.dspPage !== null))
         const result = await pgAPI.colcElements(
-          endpoint.curURL,
+          [endpoint.ins.key, pgIdx.value],
           pageRef.value.dspPage?.getBoundingClientRect() as DOMRect
         )
         endpoint.eleDict = Object.fromEntries(result.elements.map((el: any) => [el.xpath, el]))
@@ -415,13 +418,7 @@ async function onGo2NextPage() {
         break
     }
   }
-  const result = await pgAPI.colcElements(
-    [endpoint.ins.key, endpoint.ins.pages.findIndex(pg => pg.key === endpoint.form.key)],
-    pageRef.value.dspPage?.getBoundingClientRect() as DOMRect
-  )
-  endpoint.eleDict = Object.fromEntries(result.elements.map((el: any) => [el.xpath, el]))
-  endpoint.treeData = result.treeData
-  endpoint.selKeys = []
+  router.push(`/login_platform/endpoint/${endpoint.ins.key}/page/${pgIdx.value + 1}/edit`)
 }
 function onEpTitleChange() {
   endpoint.edit = true
