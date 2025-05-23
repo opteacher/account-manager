@@ -5,7 +5,7 @@
         <a-tree
           class="overflow-auto absolute top-0 bottom-0 left-0 right-0"
           :auto-expand-parent="true"
-          :tree-data="treeData"
+          :tree-data="props.treeData"
           v-model:expendedKeys="expKeys"
           :selectedKeys="props.selKeys"
           @select="(selKeys: string[]) => emit('update:selKeys', selKeys)"

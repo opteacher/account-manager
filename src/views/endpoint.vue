@@ -45,18 +45,18 @@
           </a-button>
         </template>
         <template #backIcon>
-          <ArrowLeftOutlined v-if="pgIdx > 0" />
+          <ArrowLeftOutlined v-if="endpoint.pgIdx > 0" />
         </template>
         <template #tags>
           <a-tag color="blue">
             <template #icon><BorderlessTableOutlined /></template>
-            页面{{ pgIdx + 1 }}
+            页面{{ endpoint.pgIdx + 1 }}
           </a-tag>
         </template>
         <template #extra>
           <a-input-group class="flex-1 flex" compact size="large">
             <a-select
-              :disabled="route.params.pid !== 'n'"
+              disabled
               :options="[
                 { label: '网页登录', value: 'web' },
                 { label: '终端SSH', value: 'ssh' }
@@ -99,7 +99,7 @@
               保存
             </a-button>
             <a-button
-              v-if="pgIdx < endpoint.ins.pages.length"
+              v-if="endpoint.pgIdx < endpoint.ins.pages.length"
               size="large"
               :disabled="endpoint.collecting"
               @click="onGo2NextPage"
@@ -165,7 +165,7 @@ import {
   CheckOutlined,
   CloseOutlined
 } from '@ant-design/icons-vue'
-import { h, onMounted, reactive, ref } from 'vue'
+import { h, onMounted, reactive, ref, watch, createVNode } from 'vue'
 import pgAPI from '@/apis/page'
 import { Button, Modal, notification, TreeProps } from 'ant-design-vue'
 import { newOne, reqPut, setProp, until } from '@lib/utils'
@@ -184,8 +184,6 @@ import PageEle from '@/types/pageEle'
 import { data as models } from '@/jsons/models.json'
 import Field from '@lib/types/field'
 import Endpoint from '@/types/endpoint'
-import { createVNode } from 'vue'
-import { computed } from 'vue'
 import { WebviewTag } from 'electron'
 
 const placeholders = {
@@ -237,6 +235,7 @@ const endpoint = reactive<{
   locEleMod: boolean
   emitter: TinyEmitter
   nextPage: boolean
+  pgIdx: number
 }>({
   ins: new Endpoint(),
   edit: false,
@@ -250,7 +249,8 @@ const endpoint = reactive<{
   selKeys: [],
   locEleMod: false,
   emitter: new TinyEmitter(),
-  nextPage: false
+  nextPage: false,
+  pgIdx: 0
 })
 const pageRef = ref<{ dspPage: WebviewTag | null }>({
   dspPage: null
@@ -258,12 +258,9 @@ const pageRef = ref<{ dspPage: WebviewTag | null }>({
 const authSSh = reactive({
   emitter: new TinyEmitter()
 })
-const pgIdx = computed(() => {
-  const pid = parseInt(route.params.pid as string)
-  return isNaN(pid) ? 0 : pid
-})
 
 onMounted(refresh)
+watch(() => route.fullPath, refresh)
 
 async function refresh() {
   if (!route.params.eid || route.params.eid === 'n') {
@@ -274,7 +271,7 @@ async function refresh() {
   Endpoint.copy(epInf, endpoint.ins, true)
   await endpoint.ins.decodeSlots()
   if (endpoint.ins.pages.length) {
-    Page.copy(endpoint.ins.pages[pgIdx.value], endpoint.form, true)
+    Page.copy(endpoint.ins.pages[endpoint.pgIdx], endpoint.form, true)
     await onPageUpdate()
   }
   endpoint.edit = false
@@ -284,10 +281,12 @@ async function onPageUpdate() {
   switch (endpoint.ins.login) {
     case 'web':
       {
-        endpoint.curURL = endpoint.form.url
-        await until(() => Promise.resolve(pageRef.value.dspPage !== null))
+        if (endpoint.form.url) {
+          endpoint.curURL = endpoint.form.url
+        }
+        await until(async () => pageRef.value != null)
         const result = await pgAPI.colcElements(
-          [endpoint.ins.key, pgIdx.value],
+          [endpoint.ins.key, endpoint.pgIdx],
           pageRef.value.dspPage?.getBoundingClientRect() as DOMRect
         )
         endpoint.eleDict = Object.fromEntries(result.elements.map((el: any) => [el.xpath, el]))
@@ -401,7 +400,7 @@ function onPageSave() {
   })
 }
 function onGo2BackPage() {
-  router.push(`/login_platform/endpoint/${endpoint.ins.key}/page/${pgIdx.value - 1}/edit`)
+  router.push(`/login_platform/endpoint/${endpoint.ins.key}/edit`)
 }
 async function onGo2NextPage() {
   if (!pageRef.value.dspPage) {
@@ -417,8 +416,11 @@ async function onGo2NextPage() {
         await pageRef.value.dspPage?.executeJavaScript(`${ele}.click()`)
         break
     }
+    await until(async () => pageRef.value != null && !pageRef.value.dspPage?.isLoading())
   }
-  router.push(`/login_platform/endpoint/${endpoint.ins.key}/page/${pgIdx.value + 1}/edit`)
+  endpoint.pgIdx++
+  endpoint.form.reset()
+  await onPageUpdate()
 }
 function onEpTitleChange() {
   endpoint.edit = true

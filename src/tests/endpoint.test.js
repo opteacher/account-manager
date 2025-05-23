@@ -146,6 +146,13 @@ export async function colcElements(ctx) {
       pIdx = isNaN(pIdx) ? endpoint.pages.length - 1 : pIdx
       console.log(pIdx)
 
+      /** 获取当前用户的公钥
+       * @param {Unknown} ctx
+       * @returns {Unknown}
+       **/
+      const pubKey =
+        '-----BEGIN PUBLIC KEY----- MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtphwq249G+JVSgiycc5Q xy8K+E6GwL6JwOl+EWSiOtc1AhnV1PrvIReKhuX5yk/a73I/wDbS3100mhcQX7CH PPZFfxxiZoF8jggOxVERND0hqOm70rfM+od+/AEC4ecoe94ieBR3b7CUNIuaFY3J okBJCK1KKzN8E7dmiKNsQ7OPCZUc24kS+a3TsMlT0GKyCZVATchz4WKv/Y9TfJJq rEAWhEkyiohyxsBW2igCtgZn2nc87oE7KH+71uukbMdjBfxBy+iKn+f4IhcQ0CV1 nqbLxcxbjQ+JsDqmBRr/MyjEpDu7pRjPwf9jrWwG45CrYk1gvuqWlzBB2WbhTt2K RwIDAQAB -----END PUBLIC KEY----- '
+
       /** 跳转到指定页面
        * @param {Any} array 集合
        * @returns {Any} 索引
@@ -174,12 +181,17 @@ export async function colcElements(ctx) {
          * @param {Unknown} pgInf
          * @param {Unknown} pIdx
          **/
+        if (i === pIdx) {
+          // 如果已到达当前页面，则不做操作跳出循环
+          break
+        }
         for (const slot of pgInf.slots) {
           const ele = await page.waitForXPath(slot.xpath)
           switch (slot.itype) {
             case 'input':
-              console.log(slot)
-              await ele?.type(slot.value)
+              await ele?.type(
+                slot.valEnc ? crypto.publicDecrypt(pubKey, slot.value).toString('utf8') : slot.value
+              )
               break
             case 'click':
               await ele?.click()

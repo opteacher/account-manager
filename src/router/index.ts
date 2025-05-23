@@ -29,7 +29,7 @@ const routes: Array<RouteRecordRaw> = [
     meta: { reqLogin: true }
   },
   {
-    path: `/${project.name}/endpoint/:eid/page/:idx/edit`,
+    path: `/${project.name}/endpoint/:eid/edit`,
     name: 'Endpoint',
     component: Endpoint,
     meta: { reqLogin: true }

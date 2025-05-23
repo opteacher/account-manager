@@ -137,7 +137,7 @@ async function onRecordsRefresh(records: any[], pcsFun: (pcsData: any) => void) 
 function onRecordEdit(record: any) {
   if (mname.value === 'endpoint') {
     const endpoint = Endpoint.copy(record)
-    router.push(`/${project.name}/endpoint/${endpoint.key}/page/0/edit`)
+    router.push(`/${project.name}/endpoint/${endpoint.key}/edit`)
   }
 }
 async function onRecordExpand() {

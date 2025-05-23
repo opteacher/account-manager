@@ -62,7 +62,7 @@ function createWindow() {
             executablePath: chrome.execPath,
             ignoreHTTPSErrors: true,
             defaultViewport: null,
-            args: ['--start-maximized'],
+            args: ['--start-maximized', '--disable-blink-features=IdleDetection'],
             ignoreDefaultArgs: ['--enable-automation'],
             headless: false
           })
@@ -75,7 +75,9 @@ function createWindow() {
           }
 
           for (const pgInfo of epInfo.pages) {
-            await page.goto(pgInfo.url, { waitUntil: 'networkidle0' })
+            if (pgInfo.url) {
+              await page.goto(pgInfo.url, { waitUntil: 'networkidle0' })
+            }
 
             for (const slot of pgInfo.slots) {
               const ele = await page.waitForXPath(slot.xpath)
