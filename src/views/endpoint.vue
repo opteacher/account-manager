@@ -4,7 +4,7 @@
       <a-page-header @back="onGo2BackPage">
         <template #title>
           <a-space>
-            <a-typography-title class="mb-0" :level="3">登录端</a-typography-title>
+            <a-typography-title class="mb-0" :level="3">登录端 / </a-typography-title>
             <a-form v-if="endpoint.edit" layout="inline" :model="endpoint">
               <a-form-item
                 name="edtName"
@@ -286,7 +286,7 @@ async function onPageUpdate() {
         }
         await until(async () => pageRef.value != null)
         const result = await pgAPI.colcElements(
-          [endpoint.ins.key, endpoint.pgIdx],
+          endpoint.form.url || [endpoint.ins.key, endpoint.pgIdx],
           pageRef.value.dspPage?.getBoundingClientRect() as DOMRect
         )
         endpoint.eleDict = Object.fromEntries(result.elements.map((el: any) => [el.xpath, el]))
@@ -419,7 +419,11 @@ async function onGo2NextPage() {
     await until(async () => pageRef.value != null && !pageRef.value.dspPage?.isLoading())
   }
   endpoint.pgIdx++
-  endpoint.form.reset()
+  if (endpoint.pgIdx < endpoint.ins.pages.length) {
+    Page.copy(endpoint.ins.pages[endpoint.pgIdx], endpoint.form, true)
+  } else {
+    endpoint.form.reset()
+  }
   await onPageUpdate()
 }
 function onEpTitleChange() {

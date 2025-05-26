@@ -1,6 +1,7 @@
 {
   "name": "account-manager",
   "description": "Manage web application or server ssh account. Help user record password or secret.",
+  "homepage": "https://github.com/opteacher/account-manager",
   "private": true,
   "version": "0.0.0",
   "author": {

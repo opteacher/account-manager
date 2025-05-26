@@ -5,7 +5,7 @@
       "name": "page",
       "label": "页面",
       "icon": "AppstoreOutlined",
-      "disp": true,
+      "disp": false,
       "desc": "",
       "logTime": true,
       "props": [
