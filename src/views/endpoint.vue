@@ -4,7 +4,7 @@
       <a-page-header @back="onGo2BackPage">
         <template #title>
           <a-space>
-            <a-typography-title class="mb-0" :level="3">登录端 / </a-typography-title>
+            <a-typography-title class="mb-0" :level="3">登录端 /</a-typography-title>
             <a-form v-if="endpoint.edit" layout="inline" :model="endpoint">
               <a-form-item
                 name="edtName"
@@ -141,7 +141,7 @@
     </div>
   </MainLayout>
   <FormDialog
-    title="新增页面"
+    title="新增登录端"
     width="30vw"
     :mapper="epMapper"
     :emitter="endpoint.emitter"
@@ -185,6 +185,7 @@ import { data as models } from '@/jsons/models.json'
 import Field from '@lib/types/field'
 import Endpoint from '@/types/endpoint'
 import { WebviewTag } from 'electron'
+import lgnAPI from '@/apis/login'
 
 const placeholders = {
   web: '输入网址（必须带http或https前缀）',
@@ -316,7 +317,9 @@ async function onPageUpdate() {
   endpoint.collecting = false
 }
 async function onEndpointSave(_form: any, next: Function) {
-  await mdlAPI.add('endpoint', endpoint.form)
+  const newEp = await mdlAPI.add('endpoint', endpoint.form, { copy: Endpoint.copy })
+  const { payload } = await lgnAPI.verify()
+  await mdlAPI.link('account', payload.sub, 'fkEndpoints', newEp.key)
   endpoint.form.reset()
   next()
   await refresh()

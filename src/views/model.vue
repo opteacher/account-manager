@@ -2,7 +2,7 @@
   <MainLayout>
     <EditableTable
       :api="{
-        all: () => api.all(mname, { copy: copies[mname] }),
+        all: () => api.all(mname, { copy: copies[mname], type: mname === 'endpoint' ? 'api' : 'mdl' }),
         add: (record: any) => api.add(mname, record),
         update: (record: any) => api.update(mname, record.key, record),
         remove: (record: any) => api.remove(mname, record.key)
@@ -24,7 +24,7 @@
       :delable="table.operable.includes('可删除')"
       :clkable="false"
       @refresh="onRecordsRefresh"
-      @after-save="onRecordEdit"
+      @after-save="(record: any) => onRecordEdit(record, true)"
       @edit="onRecordEdit"
       @expand="onRecordExpand"
     >
@@ -81,6 +81,7 @@ import { copies } from '@/types/index'
 import Endpoint from '@/types/endpoint'
 import { newOne, reqGet } from '@lib/utils'
 import SlotsTable from '@/components/slotsTable.vue'
+import lgnAPI from '@/apis/login'
 
 const route = useRoute()
 const router = useRouter()
@@ -134,9 +135,13 @@ async function onRecordsRefresh(records: any[], pcsFun: (pcsData: any) => void) 
     pcsFun(records)
   }
 }
-function onRecordEdit(record: any) {
+async function onRecordEdit(record: any, newRcd = false) {
   if (mname.value === 'endpoint') {
     const endpoint = Endpoint.copy(record)
+    if (newRcd) {
+      const { payload } = await lgnAPI.verify()
+      await api.link('account', payload.sub, 'fkEndpoints', endpoint.key)
+    }
     router.push(`/${project.name}/endpoint/${endpoint.key}/edit`)
   }
 }

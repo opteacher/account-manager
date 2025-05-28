@@ -41,7 +41,7 @@
             "
           >
             <template #valuePFX="{ formState }">
-              <a-button @click="() => setProp(formState, 'valEnc', !formState.valEnc)">
+              <a-button @click="() => onValEncSwitch(formState)">
                 <template #icon>
                   <LockOutlined v-if="formState.valEnc" />
                   <UnlockOutlined v-else />
@@ -112,36 +112,39 @@ const props = defineProps({
   selKeys: { type: Array as PropType<(string | number)[]>, required: true },
   treeData: { type: Object as PropType<TreeProps['treeData']>, required: true }
 })
-const slotMapper = new Mapper({
-  itype: {
-    label: '填入方式',
-    type: 'Select',
-    options: [
-      {
-        label: '输入',
-        value: 'input'
-      },
-      {
-        label: '选择',
-        value: 'select'
-      },
-      {
-        label: '点击',
-        value: 'click'
-      }
-    ]
-  },
-  value: {
-    label: '填入值',
-    type: 'Input',
-    display: [new Cond({ key: 'itype', cmp: '!=', val: 'click' })]
-  },
-  valEnc: {
-    label: '加密值',
-    type: 'Checkbox',
-    display: false
-  }
-})
+const slotMapper = reactive(
+  new Mapper({
+    itype: {
+      label: '填入方式',
+      type: 'Select',
+      options: [
+        {
+          label: '输入',
+          value: 'input'
+        },
+        {
+          label: '选择',
+          value: 'select'
+        },
+        {
+          label: '点击',
+          value: 'click'
+        }
+      ]
+    },
+    value: {
+      label: '填入值',
+      type: 'Input',
+      visible: false,
+      display: [new Cond({ key: 'itype', cmp: '!=', val: 'click' })]
+    },
+    valEnc: {
+      label: '加密值',
+      type: 'Checkbox',
+      display: false
+    }
+  })
+)
 const sideWid = ref(300)
 const actKey = ref<string[]>([])
 const expKeys = ref([])
@@ -161,6 +164,7 @@ watch(
     )
     slotForm.xpath = props.selKeys[0] as string
     actKey.value = ['1']
+    setProp(slotMapper, 'value.type', slotForm.valEnc ? 'Password' : 'Input')
   },
   { deep: true }
 )
@@ -186,5 +190,10 @@ function onSlotRemove(xpath: string) {
       )
     }
   })
+}
+function onValEncSwitch(formState: any) {
+  setProp(formState, 'valEnc', !formState.valEnc)
+  setProp(formState, 'value', '')
+  setProp(slotMapper, 'value.type', formState.valEnc ? 'Password' : 'Input')
 }
 </script>
