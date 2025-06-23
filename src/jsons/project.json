@@ -186,7 +186,10 @@
     "lclDep": true,
     "prefix": "",
     "login": {
+      "title": "账户登录管理平台",
+      "radius": 8,
       "logAccount": true,
+      "registerable": true,
       "_id": "66161fc25d71ed1eeeacf20a"
     },
     "navigate": {

@@ -374,7 +374,8 @@ function onPageSave() {
     icon: createVNode(ExclamationCircleOutlined),
     content: createVNode('div', null, '该页面会追加到当前登录端的页面流最后'),
     async onOk() {
-      await mdlAPI.link('endpoint', endpoint.ins.key, 'page', 'n', true, {
+      const pgKey = endpoint.form.key === -1 ? 'n' : endpoint.form.key
+      await mdlAPI.link('endpoint', endpoint.ins.key, 'page', pgKey, true, {
         type: 'api',
         axiosConfig: { data: endpoint.form }
       })
@@ -384,20 +385,19 @@ function onPageSave() {
         message: createVNode('h3', null, '页面保存成功！'),
         description: '是否立即执行页面操作并跳转到下个页面继续操作？',
         duration: null,
+        key,
         btn: () =>
           h(
             Button,
             {
               type: 'primary',
-              onClick: async () => {
-                await onGo2NextPage()
+              onClick: () => {
                 notification.close(key)
+                onGo2NextPage()
               }
             },
             { default: () => '操作并跳转' }
-          ),
-        key,
-        onClose: close
+          )
       })
     }
   })

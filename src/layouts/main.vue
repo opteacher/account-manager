@@ -1,12 +1,14 @@
 <template>
   <a-layout class="h-full overflow-y-hidden">
     <a-layout-header class="pl-0 pr-5 flex">
-      <div class="h-full p-2.5 bg-white" :style="{ width: '200px' }">
-        <div
+      <a-space class="h-full p-1 bg-white" align="center" :style="{ width: collapsed ? '80px' : '200px' }">
+        <!-- <div
           class="h-full bg-gray-300 rounded-sm hover:cursor-pointer hover:bg-gray-200"
           @click="() => router.push('/')"
-        />
-      </div>
+        /> -->
+        <a-avatar class="w-[72px] h-[60px]" :src="logo" />
+        <a-typography-title v-if="!collapsed" class="mb-0" :level="4">账号管理器</a-typography-title>
+      </a-space>
       <div class="flex flex-1 leading-16 justify-between">
         <div />
         <a-popover v-if="(project.auth as any).model" placement="bottomRight">
@@ -77,6 +79,7 @@ import api from '@/apis/model'
 import { rmvStartsOf } from '@lib/utils'
 import * as antdIcons from '@ant-design/icons-vue/lib/icons'
 import Model from '@/types/model'
+import logo from '@/assets/Emblem.png'
 
 const route = useRoute()
 const router = useRouter()

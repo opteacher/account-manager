@@ -76,7 +76,7 @@ import Page from '@/types/page'
 import { onMounted, reactive, ref, watch, computed } from 'vue'
 import Model from '@/types/model'
 import Table from '@/types/table'
-import useChromeStore from '@/stores/chrome'
+import useGlobalStore from '@/stores/global'
 import { copies } from '@/types/index'
 import Endpoint from '@/types/endpoint'
 import { newOne, reqGet } from '@lib/utils'
@@ -91,7 +91,7 @@ const table = reactive<Table>(new Table())
 const columns = ref<Column[]>([])
 const mapper = ref<Mapper>(new Mapper())
 const emitter = new Emitter()
-const chrome = useChromeStore()
+const chrome = useGlobalStore()
 const pgModel = models.data.find((mdl: any) => mdl.name === 'page')
 const pgCols = computed<Column[]>(() => [
   new Column('#', 'no', { width: 80 }),

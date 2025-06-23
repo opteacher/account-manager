@@ -7,6 +7,7 @@ export default {
       ignores: ['remember'],
       messages: { succeed: '' }
     }),
-  verify: () => reqPost('account/verify', undefined, { type: 'api'}),
-  verifyDeep: () => reqPost('account/verify/deep', undefined, { type: 'api'})
+  register: (data: any) => reqPost('account', data, { type: 'api', ignores: ['remember'] }),
+  verify: () => reqPost('account/verify', undefined, { type: 'api' }),
+  verifyDeep: () => reqPost('account/verify/deep', undefined, { type: 'api' })
 }
