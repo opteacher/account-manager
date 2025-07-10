@@ -59,7 +59,7 @@ function createWindow() {
         {
           const chrome = JSON.parse(sChrome)
           const browser = await puppeteer.launch({
-            executablePath: chrome.execPath,
+            executablePath: chrome.chromeExecPath,
             ignoreHTTPSErrors: true,
             defaultViewport: null,
             args: ['--start-maximized', '--disable-blink-features=IdleDetection'],
@@ -129,8 +129,21 @@ function createWindow() {
     }
   })
   ipcMain.handle('decode-value', async (_e, tkn, buf) => {
+    for (const url of [
+      import.meta.env.VITE_HLW_URL,
+      import.meta.env.VITE_GAW_URL,
+      import.meta.env.VITE_GZW_URL
+    ]) {
+      try {
+        await axios.get(url, { timeout: 1000 })
+      } catch (e: any) {
+        if (e.status) {
+          axios.defaults.baseURL = e.config.url
+          break
+        }
+      }
+    }
     const resp = await axios.get(`/${import.meta.env.VITE_PJT}/api/v1/account/public-key`, {
-      baseURL: `http://${import.meta.env.VITE_BASE_HOST}:${import.meta.env.VITE_PJT_PORT}`,
       headers: { Authorization: 'Bearer ' + tkn }
     })
     if (resp.status !== 200) {

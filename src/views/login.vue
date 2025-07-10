@@ -80,6 +80,15 @@ import { Rule } from 'ant-design-vue/es/form'
 
 const router = useRouter()
 const lgnProps = reactive(MidLgn.copy(project.middle.login))
+const formState = reactive(
+  Object.fromEntries(
+    project.auth.props
+      .map((prop: any) => [prop.name, ''])
+      .concat([['repeatPassword', '']])
+      .concat([['remember', true]])
+      .concat([['register', false]])
+  )
+)
 const lgnMapper = createByFields(
   [
     {
@@ -120,13 +129,16 @@ const lgnMapper = createByFields(
       ftype: 'Password',
       rules: [
         {
-          required: true,
+          required: !formState.register,
           message: '必须重复密码！',
           trigger: 'blur'
         },
         {
           trigger: 'blur',
           validator: async (_rule: Rule, value: string) => {
+            if (!formState.register) {
+              return Promise.resolve()
+            }
             if (value !== formState.password) {
               return Promise.reject('重复密码与原密码不一致！')
             } else {
@@ -148,15 +160,6 @@ const lgnMapper = createByFields(
     }
     return ret
   }) as Field[]
-)
-const formState = reactive(
-  Object.fromEntries(
-    project.auth.props
-      .map((prop: any) => [prop.name, ''])
-      .concat([['repeatPassword', '']])
-      .concat([['remember', true]])
-      .concat([['register', false]])
-  )
 )
 const flags = reactive({
   succeed: false
