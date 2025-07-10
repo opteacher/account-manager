@@ -129,16 +129,13 @@ const lgnMapper = createByFields(
       ftype: 'Password',
       rules: [
         {
-          required: !formState.register,
+          required: true,
           message: '必须重复密码！',
           trigger: 'blur'
         },
         {
           trigger: 'blur',
           validator: async (_rule: Rule, value: string) => {
-            if (!formState.register) {
-              return Promise.resolve()
-            }
             if (value !== formState.password) {
               return Promise.reject('重复密码与原密码不一致！')
             } else {
