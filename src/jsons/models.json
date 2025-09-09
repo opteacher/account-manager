@@ -548,7 +548,7 @@
       ],
       "form": {
         "title": "新增/编辑",
-        "width": 30,
+        "width": 50,
         "labelWidth": 4,
         "fields": [
           {

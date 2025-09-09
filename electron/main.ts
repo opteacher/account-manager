@@ -5,6 +5,7 @@ import puppeteer from 'puppeteer-core'
 import { spawn } from 'child_process'
 import crypto from 'node:crypto'
 import axios from 'axios'
+import * as ChromeLauncher from 'chrome-launcher'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -52,6 +53,9 @@ function createWindow() {
     win.loadFile(path.join(RENDERER_DIST, 'index.html'))
   }
 
+  ipcMain.handle('detect-chrome', () => {
+    return ChromeLauncher.Launcher.getInstallations()
+  })
   ipcMain.handle('login-endpoint', async (_e, sEpInfo, sChrome) => {
     const epInfo = JSON.parse(sEpInfo)
     switch (epInfo.login) {

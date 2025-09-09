@@ -86,7 +86,7 @@ const router = useRouter()
 const sdNavMdls = ref<Model[]>([])
 const sideKeys = reactive<string[]>([])
 const openKeys = reactive<string[]>([])
-const collapsed = ref(true)
+const collapsed = ref(false)
 
 onMounted(async () => {
   const mdls = models.data.filter((model: any) => model.disp)

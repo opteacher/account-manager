@@ -142,7 +142,6 @@
   </MainLayout>
   <FormDialog
     title="新增登录端"
-    width="30vw"
     :mapper="epMapper"
     :emitter="endpoint.emitter"
     :newFun="() => newOne(Endpoint)"

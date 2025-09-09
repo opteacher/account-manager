@@ -31,6 +31,7 @@
           </template>
           <FormGroup
             layout="vertical"
+            :fld-wid="24"
             :mapper="slotMapper"
             :form="slotForm"
             :rules="{
