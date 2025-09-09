@@ -1,69 +1,98 @@
 <template>
-  <MainLayout>
-    <EditableTable
-      :api="{
+  <EditableTable
+    :api="{
         all: () => api.all(mname, { copy: copies[mname], type: mname === 'endpoint' ? 'api' : 'mdl' }),
         add: (record: any) => api.add(mname, record),
         update: (record: any) => api.update(mname, record.key, record),
         remove: (record: any) => api.remove(mname, record.key)
       }"
-      :title="model.label"
-      description="使用ssh登录时请确保本地系统已安装sshpass应用，Windows系统需安装Linux子系统，并在子系统中安装sshpass！"
-      sclHeight="h-full"
-      :dlgWidth="model.form.width + 'vw'"
-      :columns="columns"
-      :mapper="mapper"
-      :new-fun="() => genDftFmProps(model.props)"
-      :emitter="emitter"
-      :size="table.size"
-      :pagable="table.hasPages"
-      :refOptions="table.refresh"
-      :dspCols="table.colDspable"
-      :editable="table.operable.includes('可编辑')"
-      :addable="table.operable.includes('可增加')"
-      :delable="table.operable.includes('可删除')"
-      :clkable="false"
-      @refresh="onRecordsRefresh"
-      @after-save="(record: any) => onRecordEdit(record, true)"
-      @edit="onRecordEdit"
-      @expand="onRecordExpand"
+    :title="model.label"
+    description="使用ssh登录时请确保本地系统已安装sshpass应用，Windows系统需安装Linux子系统，并在子系统中安装sshpass！"
+    sclHeight="h-full"
+    :dlgWidth="model.form.width + 'vw'"
+    :columns="columns"
+    :mapper="mapper"
+    :new-fun="() => genDftFmProps(model.props)"
+    :emitter="emitter"
+    :size="table.size"
+    :pagable="table.hasPages"
+    :refOptions="table.refresh"
+    :dspCols="table.colDspable"
+    :editable="table.operable.includes('可编辑')"
+    :addable="table.operable.includes('可增加')"
+    :delable="table.operable.includes('可删除')"
+    :clkable="false"
+    @refresh="onRecordsRefresh"
+    @after-save="(record: any) => onRecordEdit(record, true)"
+    @edit="onRecordEdit"
+    @expand="onRecordExpand"
+  >
+    <template
+      v-if="route.path === `/${project.name}/endpoint`"
+      #expandedRowRender="{ record: endpoint }"
     >
-      <template
-        v-if="route.path === `/${project.name}/endpoint`"
-        #expandedRowRender="{ record: endpoint }"
-      >
-        <EditableTable
-          :api="{
+      <EditableTable
+        :api="{
             all: () => api.get('endpoint', endpoint.key, { copy: Endpoint.copy }).then((ep: Endpoint) => ep.pages),
             remove: (pg: Page) => api.link('endpoint', endpoint.key, 'fkPages', pg.key, false).then(() => api.remove('page', pg.key))
           }"
-          title="页面列表"
-          :columns="pgCols"
-          :emitter="pgEmitter"
-          :new-fun="() => newOne(Page)"
-          :clkable="false"
-          @add="() => onRecordEdit(endpoint)"
-        >
-          <template #no="{ key }">{{ key }}</template>
-          <template #slots="{ record: page }">
-            <SlotsTable :record="page" />
-          </template>
-        </EditableTable>
-      </template>
-      <template v-if="route.path === `/${project.name}/page`" #slots="{ record }">
-        <SlotsTable :record="record" />
-      </template>
-      <template v-if="route.path === `/${project.name}/endpoint`" #operaBefore="{ record }">
-        <a-button type="primary" size="small" @click.stop="() => onLoginClick(record)">
-          登录
+        title="页面列表"
+        :columns="pgCols"
+        :emitter="pgEmitter"
+        :new-fun="() => newOne(Page)"
+        :clkable="false"
+        @add="() => onRecordEdit(endpoint)"
+      >
+        <template #no="{ key }">{{ key }}</template>
+        <template #slots="{ record: page }">
+          <SlotsTable :record="page" />
+        </template>
+      </EditableTable>
+    </template>
+    <template v-if="route.path === `/${project.name}/page`" #slots="{ record }">
+      <SlotsTable :record="record" />
+    </template>
+    <template v-if="route.path === `/${project.name}/endpoint`" #operaBefore="{ record }">
+      <a-button type="primary" size="small" @click.stop="() => onLoginClick(record)">登录</a-button>
+    </template>
+    <template v-if="route.path === `/${project.name}/endpoint`" #extra>
+      <a-button @click="() => cfgEmitter.emit('update:visible', true)">
+        <template #icon><MoreOutlined /></template>
+      </a-button>
+    </template>
+  </EditableTable>
+  <FormDialog
+    title="基础配置"
+    :mapper="cfgMapper"
+    :emitter="cfgEmitter"
+    :object="formState"
+    :newFun="() => ({ chromeExecPath: '' })"
+    @submit="() => cfgEmitter.emit('update:visible', false)"
+  >
+    <template #chromeExecPath>
+      <a-input-group v-if="chromePaths.length" class="flex" compact>
+        <a-select class="flex-1" v-model:value="formState.chromeExecPath">
+          <a-select-option v-for="path in chromePaths" :value="path">{{ path }}</a-select-option>
+        </a-select>
+        <a-button @click="refresh">
+          <template #icon><SyncOutlined /></template>
         </a-button>
+      </a-input-group>
+      <template v-else>
+        <a-upload name="file" :showUploadList="false" @change="onChromeSelect">
+          <a-button :type="formState.chromeExecPath ? 'primary' : 'default'">
+            指定 chrome 执行文件
+          </a-button>
+        </a-upload>
+        <span>
+          {{ formState.chromeExecPath }}
+        </span>
       </template>
-    </EditableTable>
-  </MainLayout>
+    </template>
+  </FormDialog>
 </template>
 
 <script setup lang="ts">
-import MainLayout from '@/layouts/main.vue'
 import models from '@/jsons/models.json'
 import { useRoute, useRouter } from 'vue-router'
 import { TinyEmitter as Emitter, TinyEmitter } from 'tiny-emitter'
@@ -82,6 +111,9 @@ import Endpoint from '@/types/endpoint'
 import { newOne, reqGet } from '@lib/utils'
 import SlotsTable from '@/components/slotsTable.vue'
 import lgnAPI from '@/apis/login'
+import { MoreOutlined, SyncOutlined } from '@ant-design/icons-vue'
+import FormDialog from '@lib/components/FormDialog.vue'
+import { UploadChangeParam } from 'ant-design-vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -98,11 +130,20 @@ const pgCols = computed<Column[]>(() => [
   ...(pgModel?.table.columns || []).map((col: any) => Column.copy(col))
 ])
 const pgEmitter = new TinyEmitter()
+const cfgEmitter = new TinyEmitter()
+const cfgMapper = new Mapper({
+  chromeExecPath: {
+    label: 'Chrome 执行文件路径',
+    type: 'Unknown'
+  }
+})
+const formState = reactive(useGlobalStore())
+const chromePaths = reactive<string[]>([])
 
 onMounted(refresh)
 watch(() => route.params.mname, refresh)
 
-function refresh() {
+async function refresh() {
   mname.value = route.params.mname as string
   Model.copy(
     models.data.find((mdl: any) => mdl.name === mname.value),
@@ -114,6 +155,8 @@ function refresh() {
   mapper.value = createByFields(model.form.fields)
   emitter.emit('update:mapper', mapper.value)
   emitter.emit('refresh')
+  const result = await window.ipcRenderer.invoke('detect-chrome')
+  chromePaths.splice(0, chromePaths.length, ...result)
 }
 async function onLoginClick(epInfo: Endpoint) {
   Endpoint.copy(await reqGet('endpoint', epInfo.key), epInfo)
@@ -149,5 +192,11 @@ async function onRecordExpand() {
   if (mname.value === 'endpoint') {
     pgEmitter.emit('refresh')
   }
+}
+function onChromeSelect(e: UploadChangeParam) {
+  if (!e.file.originFileObj) {
+    return
+  }
+  formState.chromeExecPath = e.file.originFileObj?.path as string
 }
 </script>

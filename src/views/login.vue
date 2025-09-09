@@ -1,6 +1,6 @@
 <template>
   <div
-    class="px-5 py-12 h-full flex items-center"
+    class="h-full flex items-center"
     :style="{
       'justify-content': lgnProps.align,
       'background-color': lgnProps.bkgdColor
@@ -166,7 +166,7 @@ onMounted(async () => {
   if (localStorage.getItem('token')) {
     const result = await api.verifyDeep()
     if (!result.error) {
-      router.replace(`/${project.name}/`)
+      router.replace(`/${project.name}/endpoint`)
     }
   }
 })
@@ -182,7 +182,7 @@ async function onFinish(values: any) {
     const result = await api.login(values)
     if (result.token) {
       localStorage.setItem('token', result.token)
-      router.push(`/${project.name}/`)
+      router.push(`/${project.name}/endpoint`)
     }
   }
 }

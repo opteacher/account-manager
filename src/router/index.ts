@@ -4,7 +4,6 @@ import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router'
 import Model from '../views/model.vue'
 import login from '../views/login.vue'
 import project from '@/jsons/project.json'
-import Home from '../views/home.vue'
 import Endpoint from '../views/endpoint.vue'
 
 const routes: Array<RouteRecordRaw> = [
@@ -14,13 +13,7 @@ const routes: Array<RouteRecordRaw> = [
   },
   {
     path: `/${project.name}/`,
-    redirect: `/${project.name}/home`
-  },
-  {
-    path: `/${project.name}/home`,
-    name: 'Home',
-    component: Home,
-    meta: { reqLogin: true }
+    redirect: `/${project.name}/login`
   },
   {
     path: `/${project.name}/:mname`,

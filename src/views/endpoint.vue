@@ -1,145 +1,134 @@
 <template>
-  <MainLayout>
-    <div class="h-full flex flex-col">
-      <a-page-header @back="onGo2BackPage">
-        <template #title>
-          <a-space>
-            <a-typography-title class="mb-0" :level="3">登录端 /</a-typography-title>
-            <a-form v-if="endpoint.edit" layout="inline" :model="endpoint">
-              <a-form-item
-                name="edtName"
-                :rules="[{ required: true, message: '必须输入登录端名！' }]"
-              >
-                <a-input
-                  v-model:value="endpoint.edtName"
-                  allowClear
-                  :disabled="endpoint.collecting"
-                >
-                  <template #suffix>
-                    <a-button size="small" type="link" @click="onEpTitleSave">
-                      <template #icon><CheckOutlined /></template>
-                    </a-button>
-                    <a-button
-                      size="small"
-                      type="link"
-                      danger
-                      @click="() => setProp(endpoint, 'edit', false)"
-                    >
-                      <template #icon><CloseOutlined /></template>
-                    </a-button>
-                  </template>
-                </a-input>
-              </a-form-item>
-            </a-form>
-            <a-typography-title v-else class="mb-0" :level="3">
-              {{ endpoint.ins.name }}
-            </a-typography-title>
-          </a-space>
-          <a-button
-            v-if="!endpoint.edit"
-            type="link"
-            :disabled="endpoint.collecting"
-            @click="onEpTitleChange"
+  <div class="h-full flex flex-col">
+    <a-page-header @back="onGo2BackPage">
+      <template #title>
+        <a-space>
+          <a-typography-title class="mb-0" :level="3">登录端 /</a-typography-title>
+          <a-form v-if="endpoint.edit" layout="inline" :model="endpoint">
+            <a-form-item
+              name="edtName"
+              :rules="[{ required: true, message: '必须输入登录端名！' }]"
+            >
+              <a-input v-model:value="endpoint.edtName" allowClear :disabled="endpoint.collecting">
+                <template #suffix>
+                  <a-button size="small" type="link" @click="onEpTitleSave">
+                    <template #icon><CheckOutlined /></template>
+                  </a-button>
+                  <a-button
+                    size="small"
+                    type="link"
+                    danger
+                    @click="() => setProp(endpoint, 'edit', false)"
+                  >
+                    <template #icon><CloseOutlined /></template>
+                  </a-button>
+                </template>
+              </a-input>
+            </a-form-item>
+          </a-form>
+          <a-typography-title v-else class="mb-0" :level="3">
+            {{ endpoint.ins.name }}
+          </a-typography-title>
+        </a-space>
+        <a-button
+          v-if="!endpoint.edit"
+          type="link"
+          :disabled="endpoint.collecting"
+          @click="onEpTitleChange"
+        >
+          <template #icon><EditOutlined /></template>
+        </a-button>
+      </template>
+      <template #backIcon>
+        <ArrowLeftOutlined v-if="endpoint.pgIdx > 0" />
+      </template>
+      <template #tags>
+        <a-tag color="blue">
+          <template #icon><BorderlessTableOutlined /></template>
+          页面{{ endpoint.pgIdx + 1 }}
+        </a-tag>
+      </template>
+      <template #extra>
+        <a-input-group class="flex-1 flex" compact size="large">
+          <a-select
+            disabled
+            :options="[
+              { label: '网页登录', value: 'web' },
+              { label: '终端SSH', value: 'ssh' }
+            ]"
+            v-model:value="endpoint.ins.login"
+            @change="onLgnTypeChange"
+          />
+          <a-input
+            class="flex-1 min-w-[30vw]"
+            allowClear
+            v-model:value="endpoint.form.url"
+            :placeholder="placeholders[endpoint.ins.login]"
+            @pressEnter="onPageUpdate"
           >
-            <template #icon><EditOutlined /></template>
+            <template #prefix><RightOutlined /></template>
+            <template #clearIcon>
+              <CloseCircleFilled @click="() => (endpoint.curURL = '')" />
+            </template>
+          </a-input>
+          <a-button
+            v-if="endpoint.ins.login === 'ssh'"
+            :type="endpoint.form.slots.length ? 'primary' : 'default'"
+            @click="onAuthSshShow"
+          >
+            <template #icon><KeyOutlined /></template>
+            {{ endpoint.form.slots.length ? '已认证' : '认证' }}
           </a-button>
-        </template>
-        <template #backIcon>
-          <ArrowLeftOutlined v-if="endpoint.pgIdx > 0" />
-        </template>
-        <template #tags>
-          <a-tag color="blue">
-            <template #icon><BorderlessTableOutlined /></template>
-            页面{{ endpoint.pgIdx + 1 }}
-          </a-tag>
-        </template>
-        <template #extra>
-          <a-input-group class="flex-1 flex" compact size="large">
-            <a-select
-              disabled
-              :options="[
-                { label: '网页登录', value: 'web' },
-                { label: '终端SSH', value: 'ssh' }
-              ]"
-              v-model:value="endpoint.ins.login"
-              @change="onLgnTypeChange"
-            />
-            <a-input
-              class="flex-1 min-w-[30vw]"
-              allowClear
-              v-model:value="endpoint.form.url"
-              :placeholder="placeholders[endpoint.ins.login]"
-              @pressEnter="onPageUpdate"
-            >
-              <template #prefix><RightOutlined /></template>
-              <template #clearIcon>
-                <CloseCircleFilled @click="() => (endpoint.curURL = '')" />
-              </template>
-            </a-input>
-            <a-button
-              v-if="endpoint.ins.login === 'ssh'"
-              :type="endpoint.form.slots.length ? 'primary' : 'default'"
-              @click="onAuthSshShow"
-            >
-              <template #icon><KeyOutlined /></template>
-              {{ endpoint.form.slots.length ? '已认证' : '认证' }}
-            </a-button>
-            <a-button @click="onPageUpdate" :loading="endpoint.collecting">
-              <template #icon><SendOutlined /></template>
-              {{ endpoint.ins.login === 'ssh' ? '登录' : '跳转' }}
-            </a-button>
-          </a-input-group>
-          <a-input-group compact size="large">
-            <a-button
-              type="primary"
-              size="large"
-              :disabled="endpoint.collecting"
-              @click="onPageSave"
-            >
-              保存
-            </a-button>
-            <a-button
-              v-if="endpoint.pgIdx < endpoint.ins.pages.length"
-              size="large"
-              :disabled="endpoint.collecting"
-              @click="onGo2NextPage"
-            >
-              下一页
-            </a-button>
-          </a-input-group>
-        </template>
-      </a-page-header>
-      <FormDialog
-        title="SSH认证"
-        width="30vw"
-        :mapper="authMapper"
-        :emitter="authSSh.emitter"
-        :newFun="() => newOne(AuthSSH)"
-        @submit="onAuthSshSubmit"
-      />
-      <div v-if="endpoint.ins.login === 'ssh'" class="flex-1 flex mt-5">
-        <SshPanel :curURL="endpoint.curURL" />
-      </div>
-      <div v-else-if="endpoint.ins.login === 'web'" class="flex-1 flex mt-5">
-        <WebPanel
-          ref="pageRef"
-          :curURL="endpoint.curURL"
-          :collecting="endpoint.collecting"
-          :form="endpoint.form"
-          :eleDict="endpoint.eleDict"
-          v-model:selKeys="endpoint.selKeys"
-          v-model:locEleMod="endpoint.locEleMod"
-        />
-        <SlotSideBar
-          :collecting="endpoint.collecting"
-          :form="endpoint.form"
-          :tree-data="endpoint.treeData"
-          v-model:selKeys="endpoint.selKeys"
-          v-model:locEleMod="endpoint.locEleMod"
-        />
-      </div>
+          <a-button @click="onPageUpdate" :loading="endpoint.collecting">
+            <template #icon><SendOutlined /></template>
+            {{ endpoint.ins.login === 'ssh' ? '登录' : '跳转' }}
+          </a-button>
+        </a-input-group>
+        <a-input-group compact size="large">
+          <a-button type="primary" size="large" :disabled="endpoint.collecting" @click="onPageSave">
+            保存
+          </a-button>
+          <a-button
+            v-if="endpoint.pgIdx < endpoint.ins.pages.length"
+            size="large"
+            :disabled="endpoint.collecting"
+            @click="onGo2NextPage"
+          >
+            下一页
+          </a-button>
+        </a-input-group>
+      </template>
+    </a-page-header>
+    <FormDialog
+      title="SSH认证"
+      width="30vw"
+      :mapper="authMapper"
+      :emitter="authSSh.emitter"
+      :newFun="() => newOne(AuthSSH)"
+      @submit="onAuthSshSubmit"
+    />
+    <div v-if="endpoint.ins.login === 'ssh'" class="flex-1 flex mt-5">
+      <SshPanel :curURL="endpoint.curURL" />
     </div>
-  </MainLayout>
+    <div v-else-if="endpoint.ins.login === 'web'" class="flex-1 flex mt-5">
+      <WebPanel
+        ref="pageRef"
+        :curURL="endpoint.curURL"
+        :collecting="endpoint.collecting"
+        :form="endpoint.form"
+        :eleDict="endpoint.eleDict"
+        v-model:selKeys="endpoint.selKeys"
+        v-model:locEleMod="endpoint.locEleMod"
+      />
+      <SlotSideBar
+        :collecting="endpoint.collecting"
+        :form="endpoint.form"
+        :tree-data="endpoint.treeData"
+        v-model:selKeys="endpoint.selKeys"
+        v-model:locEleMod="endpoint.locEleMod"
+      />
+    </div>
+  </div>
   <FormDialog
     title="新增登录端"
     :mapper="epMapper"
@@ -150,7 +139,6 @@
 </template>
 
 <script setup lang="ts">
-import MainLayout from '@/layouts/main.vue'
 import {
   SendOutlined,
   RightOutlined,
