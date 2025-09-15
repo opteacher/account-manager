@@ -1,13 +1,19 @@
 <template>
   <a-layout class="h-full overflow-y-hidden">
-    <a-layout-header v-if="route.path !== '/login_platform/login'" class="pl-0 pr-5 flex">
-      <a-space class="h-full p-1 bg-white" align="center" :style="{ width: collapsed ? '80px' : '200px' }">
+    <a-layout-header v-if="route.path !== '/login_platform/login'" class="pl-0 pr-5 flex bg-white">
+      <a-space
+        class="h-full p-1 bg-white"
+        align="center"
+        :style="{ width: collapsed ? '80px' : '200px' }"
+      >
         <!-- <div
           class="h-full bg-gray-300 rounded-sm hover:cursor-pointer hover:bg-gray-200"
           @click="() => router.push('/')"
         /> -->
         <a-avatar class="w-[72px] h-[60px]" :src="logo" />
-        <a-typography-title v-if="!collapsed" class="mb-0" :level="4">账号管理器</a-typography-title>
+        <a-typography-title v-if="!collapsed" class="mb-0" :level="4">
+          账号管理器
+        </a-typography-title>
       </a-space>
       <div class="flex flex-1 leading-16 justify-between">
         <div />
@@ -22,7 +28,13 @@
       </div>
     </a-layout-header>
     <a-layout class="h-full">
-      <a-layout-sider v-if="route.path !== '/login_platform/login'" width="200" v-model:collapsed="collapsed" :trigger="null" collapsible>
+      <a-layout-sider
+        v-if="route.path !== '/login_platform/login'"
+        width="200"
+        v-model:collapsed="collapsed"
+        :trigger="null"
+        collapsible
+      >
         <a-menu
           :selectedKeys="sideKeys"
           :openKeys="openKeys"

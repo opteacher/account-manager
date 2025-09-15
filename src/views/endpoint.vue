@@ -273,6 +273,9 @@ async function onPageUpdate() {
           endpoint.curURL = endpoint.form.url
         }
         await until(async () => pageRef.value != null)
+        pageRef.value.dspPage?.addEventListener('dom-ready', async () => {
+          console.log(await pageRef.value.dspPage?.executeJavaScript('document.querySelectorAll("*")', true))
+        })
         const result = await pgAPI.colcElements(
           endpoint.form.url || [endpoint.ins.key, endpoint.pgIdx],
           pageRef.value.dspPage?.getBoundingClientRect() as DOMRect

@@ -6,6 +6,7 @@ import { spawn } from 'child_process'
 import crypto from 'node:crypto'
 import axios from 'axios'
 import * as ChromeLauncher from 'chrome-launcher'
+import colcEles from './colcEles'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -157,6 +158,7 @@ function createWindow() {
       .publicDecrypt(Buffer.from(resp.data.result), Buffer.from(JSON.parse(buf)))
       .toString('utf8')
   })
+  ipcMain.handle('collect-elements', colcEles)
 }
 
 app.commandLine.appendSwitch('--ignore-certificate-errors', 'true')

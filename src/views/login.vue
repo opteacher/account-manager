@@ -48,6 +48,14 @@
         </a-form-item>
 
         <a-form-item :wrapper-col="{ offset: 4, span: 8 }">
+          <template #label>
+            <a-tooltip>
+              <template #title>修复浏览器环境</template>
+              <a-button type="text" @click="onFixBtnClick">
+                <template #icon><ToolOutlined /></template>
+              </a-button>
+            </a-tooltip>
+          </template>
           <a-button class="px-8" type="primary" size="large" html-type="submit">
             {{ formState.register ? '注册' : '登录' }}
           </a-button>
@@ -77,6 +85,8 @@ import { createByFields } from '@lib/types/mapper'
 import { setProp } from '@lib/utils'
 import { Cond } from '@lib/types'
 import { Rule } from 'ant-design-vue/es/form'
+import { ToolOutlined } from '@ant-design/icons-vue'
+import { message } from 'ant-design-vue'
 
 const router = useRouter()
 const lgnProps = reactive(MidLgn.copy(project.middle.login))
@@ -202,5 +212,9 @@ async function onLoginAftReg() {
   formState.register = false
   await onFinish(formState)
   flags.succeed = false
+}
+function onFixBtnClick() {
+  localStorage.removeItem('token')
+  message.success('浏览器环境被修复！')
 }
 </script>

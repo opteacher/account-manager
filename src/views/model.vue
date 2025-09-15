@@ -56,18 +56,27 @@
       <a-button type="primary" size="small" @click.stop="() => onLoginClick(record)">登录</a-button>
     </template>
     <template v-if="route.path === `/${project.name}/endpoint`" #extra>
-      <a-button @click="() => cfgEmitter.emit('update:visible', true)">
+      <a-button v-if="idChrome" @click="onCfgDlgOpen">
         <template #icon><MoreOutlined /></template>
       </a-button>
+      <a-tooltip v-else placement="bottomRight">
+        <template #title>
+          <WarningOutlined />
+          还未没有指定Chrome执行文件！
+        </template>
+        <a-button type="primary" danger @click="onCfgDlgOpen">
+          <template #icon><MoreOutlined /></template>
+        </a-button>
+      </a-tooltip>
     </template>
   </EditableTable>
   <FormDialog
     title="基础配置"
+    :lbl-wid="6"
     :mapper="cfgMapper"
     :emitter="cfgEmitter"
-    :object="formState"
     :newFun="() => ({ chromeExecPath: '' })"
-    @submit="() => cfgEmitter.emit('update:visible', false)"
+    @submit="onCfgSubmit"
   >
     <template #chromeExecPath>
       <a-input-group v-if="chromePaths.length" class="flex" compact>
@@ -111,7 +120,7 @@ import Endpoint from '@/types/endpoint'
 import { newOne, reqGet } from '@lib/utils'
 import SlotsTable from '@/components/slotsTable.vue'
 import lgnAPI from '@/apis/login'
-import { MoreOutlined, SyncOutlined } from '@ant-design/icons-vue'
+import { MoreOutlined, SyncOutlined, WarningOutlined } from '@ant-design/icons-vue'
 import FormDialog from '@lib/components/FormDialog.vue'
 import { UploadChangeParam } from 'ant-design-vue'
 
@@ -139,6 +148,7 @@ const cfgMapper = new Mapper({
 })
 const formState = reactive(useGlobalStore())
 const chromePaths = reactive<string[]>([])
+const idChrome = computed(() => chrome.chromeExecPath || false)
 
 onMounted(refresh)
 watch(() => route.params.mname, refresh)
@@ -198,5 +208,14 @@ function onChromeSelect(e: UploadChangeParam) {
     return
   }
   formState.chromeExecPath = e.file.originFileObj?.path as string
+}
+function onCfgDlgOpen() {
+  cfgEmitter.emit('update:visible', {
+    show: true,
+    object: { chromeExecPath: chrome.chromeExecPath }
+  })
+}
+function onCfgSubmit(_form: any, done: () => void) {
+  done()
 }
 </script>
