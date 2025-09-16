@@ -1,9 +1,15 @@
 import { gnlCpy } from '@lib/utils'
 
+export const itypes = {
+  input: '输入',
+  select: '选择',
+  click: '点击'
+}
+
 export class Slot {
   key: number
   xpath: string
-  itype: 'input' | 'select' | 'click'
+  itype: keyof typeof itypes
   value: string
   valEnc: boolean
 

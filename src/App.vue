@@ -1,76 +1,86 @@
 <template>
-  <a-layout class="h-full overflow-y-hidden">
-    <a-layout-header v-if="route.path !== '/login_platform/login'" class="pl-0 pr-5 flex bg-white">
-      <a-space
-        class="h-full p-1 bg-white"
-        align="center"
-        :style="{ width: collapsed ? '80px' : '200px' }"
+  <a-config-provider :locale="zhCN">
+    <a-layout class="h-full overflow-y-hidden">
+      <a-layout-header
+        v-if="route.path !== '/login_platform/login'"
+        class="pl-0 pr-5 flex bg-white"
       >
-        <!-- <div
+        <a-space
+          class="h-full p-1 bg-white"
+          align="center"
+          :style="{ width: collapsed ? '80px' : '200px' }"
+        >
+          <!-- <div
           class="h-full bg-gray-300 rounded-sm hover:cursor-pointer hover:bg-gray-200"
           @click="() => router.push('/')"
         /> -->
-        <a-avatar class="w-[72px] h-[60px]" :src="logo" />
-        <a-typography-title v-if="!collapsed" class="mb-0" :level="4">
-          账号管理器
-        </a-typography-title>
-      </a-space>
-      <div class="flex flex-1 leading-16 justify-between">
-        <div />
-        <a-popover v-if="(project.auth as any).model" placement="bottomRight">
-          <template #content>
-            <a-button type="primary" danger ghost @click="onLogoutClick">退出</a-button>
-          </template>
-          <a-button class="h-full w-16 rounded-none text-gray-300 hover:text-primary" type="text">
-            <template #icon><UserOutlined class="text-2xl leading-none" /></template>
-          </a-button>
-        </a-popover>
-      </div>
-    </a-layout-header>
-    <a-layout class="h-full">
-      <a-layout-sider
-        v-if="route.path !== '/login_platform/login'"
-        width="200"
-        v-model:collapsed="collapsed"
-        :trigger="null"
-        collapsible
-      >
-        <a-menu
-          :selectedKeys="sideKeys"
-          :openKeys="openKeys"
-          mode="inline"
-          class="flex-1 border-r-0"
-          theme="dark"
-          @select="onMuItmSelect"
+          <a-avatar class="w-[72px] h-[60px]" :src="logo" />
+          <a-typography-title v-if="!collapsed" class="mb-0" :level="4">
+            账号管理器
+          </a-typography-title>
+        </a-space>
+        <div class="flex flex-1 leading-16 justify-between">
+          <div />
+          <a-popover v-if="(project.auth as any).model" placement="bottomRight">
+            <template #content>
+              <a-button type="primary" danger ghost @click="onLogoutClick">退出</a-button>
+            </template>
+            <a-button class="h-full w-16 rounded-none text-gray-300 hover:text-primary" type="text">
+              <template #icon><UserOutlined class="text-2xl leading-none" /></template>
+            </a-button>
+          </a-popover>
+        </div>
+      </a-layout-header>
+      <a-layout class="h-full">
+        <a-layout-sider
+          v-if="route.path !== '/login_platform/login'"
+          width="200"
+          v-model:collapsed="collapsed"
+          :trigger="null"
+          collapsible
         >
-          <a-menu-item v-for="model in sdNavMdls" :key="model.name">
-            <keep-alive v-if="model.icon">
-              <component :is="getIconCompo(model.icon)" />
-            </keep-alive>
-            <span>{{ model.label }}</span>
-          </a-menu-item>
-          <a-menu-item key="endpoint/n/edit">
-            <FormOutlined />
-            <span>编辑页面</span>
-          </a-menu-item>
-        </a-menu>
-        <a-button class="w-full rounded-none" size="large" @click="() => (collapsed = !collapsed)">
-          <template #icon>
-            <menu-unfold-outlined v-if="collapsed" class="text-lg" />
-            <menu-fold-outlined v-else class="text-lg" />
-          </template>
-        </a-button>
-      </a-layout-sider>
-      <a-layout>
-        <a-layout-content class="bg-gray-300 p-2.5 m-0 h-full">
-          <div class="bg-white h-full p-2.5"><router-view /></div>
-        </a-layout-content>
+          <a-menu
+            :selectedKeys="sideKeys"
+            :openKeys="openKeys"
+            mode="inline"
+            class="flex-1 border-r-0"
+            theme="dark"
+            @select="onMuItmSelect"
+          >
+            <a-menu-item v-for="model in sdNavMdls" :key="model.name">
+              <keep-alive v-if="model.icon">
+                <component :is="getIconCompo(model.icon)" />
+              </keep-alive>
+              <span>{{ model.label }}</span>
+            </a-menu-item>
+            <a-menu-item key="endpoint/n/edit">
+              <FormOutlined />
+              <span>编辑页面</span>
+            </a-menu-item>
+          </a-menu>
+          <a-button
+            class="w-full rounded-none"
+            size="large"
+            @click="() => (collapsed = !collapsed)"
+          >
+            <template #icon>
+              <menu-unfold-outlined v-if="collapsed" class="text-lg" />
+              <menu-fold-outlined v-else class="text-lg" />
+            </template>
+          </a-button>
+        </a-layout-sider>
+        <a-layout>
+          <a-layout-content class="bg-gray-300 p-2.5 m-0 h-full">
+            <div class="bg-white h-full p-2.5"><router-view /></div>
+          </a-layout-content>
+        </a-layout>
       </a-layout>
     </a-layout>
-  </a-layout>
+  </a-config-provider>
 </template>
 
 <script lang="ts" setup>
+import zhCN from 'ant-design-vue/es/locale/zh_CN'
 import { SelectInfo } from 'ant-design-vue/lib/menu/src/interface'
 import { type Component, onMounted, reactive, ref } from 'vue'
 import project from '@/jsons/project.json'
@@ -80,7 +90,6 @@ import {
   UserOutlined,
   MenuUnfoldOutlined,
   MenuFoldOutlined,
-  HomeOutlined,
   FormOutlined
 } from '@ant-design/icons-vue'
 import api from '@/apis/model'

@@ -79,22 +79,9 @@
             <template #icon><KeyOutlined /></template>
             {{ endpoint.form.slots.length ? '已认证' : '认证' }}
           </a-button>
-          <a-button @click="onPageUpdate" :loading="endpoint.collecting">
+          <a-button type="primary" @click="onPageUpdate" :loading="endpoint.collecting">
             <template #icon><SendOutlined /></template>
             {{ endpoint.ins.login === 'ssh' ? '登录' : '跳转' }}
-          </a-button>
-        </a-input-group>
-        <a-input-group compact size="large">
-          <a-button type="primary" size="large" :disabled="endpoint.collecting" @click="onPageSave">
-            保存
-          </a-button>
-          <a-button
-            v-if="endpoint.pgIdx < endpoint.ins.pages.length"
-            size="large"
-            :disabled="endpoint.collecting"
-            @click="onGo2NextPage"
-          >
-            下一页
           </a-button>
         </a-input-group>
       </template>
@@ -111,6 +98,7 @@
       <SshPanel :curURL="endpoint.curURL" />
     </div>
     <div v-else-if="endpoint.ins.login === 'web'" class="flex-1 flex mt-5">
+      <StepSideBar class="mr-2 w-80" :endpoint="endpoint.ins" @click="onGo2NextPage" />
       <WebPanel
         ref="pageRef"
         :curURL="endpoint.curURL"
@@ -173,6 +161,7 @@ import Field from '@lib/types/field'
 import Endpoint from '@/types/endpoint'
 import { WebviewTag } from 'electron'
 import lgnAPI from '@/apis/login'
+import StepSideBar from '@/components/stepSideBar.vue'
 
 const placeholders = {
   web: '输入网址（必须带http或https前缀）',
@@ -260,16 +249,18 @@ async function refresh() {
   await endpoint.ins.decodeSlots()
   if (endpoint.ins.pages.length) {
     Page.copy(endpoint.ins.pages[endpoint.pgIdx], endpoint.form, true)
-    await onPageUpdate()
+    onPageUpdate()
   }
   endpoint.edit = false
 }
-async function onPageUpdate() {
+function onPageUpdate() {
   endpoint.collecting = true
   switch (endpoint.ins.login) {
     case 'web':
       if (endpoint.form.url) {
         endpoint.curURL = endpoint.form.url
+      } else {
+        onPageLoaded()
       }
       break
     case 'ssh':
@@ -288,10 +279,10 @@ async function onPageUpdate() {
           '-o%20StrictHostKeyChecking=no',
           `${username}@${host}`
         ].join('%20')
+        endpoint.collecting = false
       }
       break
   }
-  endpoint.collecting = false
 }
 async function onEndpointSave(_form: any, next: Function) {
   const newEp = await mdlAPI.add('endpoint', endpoint.form, { copy: Endpoint.copy })
@@ -404,7 +395,7 @@ async function onGo2NextPage() {
   } else {
     endpoint.form.reset()
   }
-  await onPageUpdate()
+  onPageUpdate()
 }
 function onEpTitleChange() {
   endpoint.edit = true
@@ -483,6 +474,7 @@ async function onPageLoaded() {
   endpoint.eleDict = Object.fromEntries(elements.map((el: any) => [el.xpath, el]))
   endpoint.treeData = treeData
   endpoint.selKeys = []
+  endpoint.collecting = false
 }
 </script>
 

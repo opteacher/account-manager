@@ -36,7 +36,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
-      '@lib': fileURLToPath(new URL('./lib/src', import.meta.url))
+      '@lib': fileURLToPath(new URL('./lib/src', import.meta.url)),
+      __dirname: path.resolve(__dirname, '.')
     }
   },
   server: {

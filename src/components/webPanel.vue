@@ -10,6 +10,7 @@
         nodeintegrationinsubframes
         webpreferences="allowRunningInsecureContent"
         @did-stop-loading="onPageLoaded"
+        @console-message="(e: any) => console.log(e.message)"
       />
       <a-space
         class="z-50 rounded-md p-1 absolute bottom-5 left-5"
@@ -93,6 +94,20 @@
               @click="() => emit('update:selKeys', [slot.xpath])"
             />
           </svg>
+          <a-button
+            v-if="selRect.width"
+            class="absolute"
+            danger
+            type="text"
+            size="small"
+            :style="{
+              top: selRect.y + 'px',
+              left: selRect.x + selRect.width + 5 + 'px'
+            }"
+            @click="() => emit('update:selKeys', [])"
+          >
+            <template #icon><CloseOutlined /></template>
+          </a-button>
           <a-tag
             v-for="(slot, index) in form.slots.filter((slot: any) => slot.xpath in eleDict)"
             :key="slot.xpath"
@@ -141,13 +156,28 @@
         </ol>
       </a-typography-paragraph>
     </div>
+    <a-modal v-model:open="delSlotVsb">
+      <template #title>
+        <ExclamationCircleOutlined class="text-red-600" />
+        &nbsp;确定删除该操作步骤吗？
+      </template>
+      <a-checkbox v-model:checked="delSlotNexts">
+        是否删除之后的步骤？不删操作顺序会乱建议删除
+      </a-checkbox>
+    </a-modal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, PropType, reactive, ref } from 'vue'
+import { computed, nextTick, onMounted, PropType, reactive, ref } from 'vue'
 import ColorSelect from '@lib/components/ColorSelect.vue'
-import { AimOutlined, StopOutlined, BorderOutlined } from '@ant-design/icons-vue'
+import {
+  AimOutlined,
+  StopOutlined,
+  BorderOutlined,
+  CloseOutlined,
+  ExclamationCircleOutlined
+} from '@ant-design/icons-vue'
 import Page from '@/types/page'
 import PageEle from '@/types/pageEle'
 import { RectBox } from '@/utils'
@@ -182,6 +212,15 @@ const selStkColor = ref('red')
 const slotStkColor = ref('green')
 const maskVsb = ref(true)
 defineExpose({ dspPage })
+const delSlotVsb = ref(false)
+const delSlotNexts = ref(false)
+
+onMounted(async () => {
+  await until(async () => dspPage.value !== null)
+  await dspPage.value?.executeJavaScript(
+    'window.addEventListener("load", () => console.log("page-loaded"))'
+  )
+})
 
 function onRgtMnuClick({ key }: { key: 'check' | 'clear' }) {
   if (key === 'clear') {
@@ -189,8 +228,7 @@ function onRgtMnuClick({ key }: { key: 'check' | 'clear' }) {
   }
 }
 async function onPageLoaded() {
-  // @_@：找个合适的方式等待页面加载完成
-  setTimeout(() => emit('pageLoaded'), 3000)
+  setTimeout(() => emit('pageLoaded'), 2000)
   try {
     dspRect.width = dspPage.value?.clientWidth as number
     dspRect.height = dspPage.value?.clientHeight as number
