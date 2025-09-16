@@ -7,8 +7,9 @@
         :src="curURL"
         ref="dspPage"
         disablewebsecurity
+        nodeintegrationinsubframes
         webpreferences="allowRunningInsecureContent"
-        @did-stop-loading="onPageLoad"
+        @did-stop-loading="onPageLoaded"
       />
       <a-space
         class="z-50 rounded-md p-1 absolute bottom-5 left-5"
@@ -152,8 +153,9 @@ import PageEle from '@/types/pageEle'
 import { RectBox } from '@/utils'
 import { inRect } from '@/utils'
 import { WebviewTag } from 'electron'
+import { until } from '@lib/utils'
 
-const emit = defineEmits(['update:selKeys', 'update:locEleMod'])
+const emit = defineEmits(['update:selKeys', 'update:locEleMod', 'pageLoaded'])
 const props = defineProps({
   curURL: { type: String, required: true },
   collecting: { type: Boolean, required: true },
@@ -186,7 +188,9 @@ function onRgtMnuClick({ key }: { key: 'check' | 'clear' }) {
     emit('update:selKeys', [])
   }
 }
-function onPageLoad() {
+async function onPageLoaded() {
+  // @_@：找个合适的方式等待页面加载完成
+  setTimeout(() => emit('pageLoaded'), 3000)
   try {
     dspRect.width = dspPage.value?.clientWidth as number
     dspRect.height = dspPage.value?.clientHeight as number

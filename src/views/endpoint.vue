@@ -119,6 +119,7 @@
         :eleDict="endpoint.eleDict"
         v-model:selKeys="endpoint.selKeys"
         v-model:locEleMod="endpoint.locEleMod"
+        @page-loaded="onPageLoaded"
       />
       <SlotSideBar
         :collecting="endpoint.collecting"
@@ -153,7 +154,6 @@ import {
   CloseOutlined
 } from '@ant-design/icons-vue'
 import { h, onMounted, reactive, ref, watch, createVNode } from 'vue'
-import pgAPI from '@/apis/page'
 import { Button, Modal, notification, TreeProps } from 'ant-design-vue'
 import { newOne, reqPut, setProp, until } from '@lib/utils'
 import Mapper, { createByFields } from '@lib/types/mapper'
@@ -268,21 +268,8 @@ async function onPageUpdate() {
   endpoint.collecting = true
   switch (endpoint.ins.login) {
     case 'web':
-      {
-        if (endpoint.form.url) {
-          endpoint.curURL = endpoint.form.url
-        }
-        await until(async () => pageRef.value != null)
-        pageRef.value.dspPage?.addEventListener('dom-ready', async () => {
-          console.log(await pageRef.value.dspPage?.executeJavaScript('document.querySelectorAll("*")', true))
-        })
-        const result = await pgAPI.colcElements(
-          endpoint.form.url || [endpoint.ins.key, endpoint.pgIdx],
-          pageRef.value.dspPage?.getBoundingClientRect() as DOMRect
-        )
-        endpoint.eleDict = Object.fromEntries(result.elements.map((el: any) => [el.xpath, el]))
-        endpoint.treeData = result.treeData
-        endpoint.selKeys = []
+      if (endpoint.form.url) {
+        endpoint.curURL = endpoint.form.url
       }
       break
     case 'ssh':
@@ -426,6 +413,76 @@ function onEpTitleChange() {
 async function onEpTitleSave() {
   await reqPut('endpoint', endpoint.ins.key, { name: endpoint.edtName })
   await refresh()
+}
+async function onPageLoaded() {
+  const elements = JSON.parse(
+    await pageRef.value.dspPage?.executeJavaScript(`
+      JSON.stringify(Array.from(document.getElementsByTagName('*')).map(function(el) {
+        const tagName = el.tagName.toLowerCase()
+        const ret = {
+          tagName,
+          clazz: el.className,
+          rectBox: el.getBoundingClientRect().toJSON()
+        }
+        if (['style', 'script', 'link', 'meta', 'head', 'header', 'title'].includes(tagName)) {
+          return
+        }
+        if (el === document.body) {
+          return { xpath: '/html/body', ...ret }
+        }
+        if (el.id !== '') {
+          return { xpath: '//*[@id="' + el.id + '"]', id: el.id, ...ret }
+        }
+        let index = 1
+        const siblings = el.parentElement && el.parentElement.children
+          ? el.parentElement.children : []
+        for (const sibling of siblings) {
+          if (sibling === el) {
+            const prtEl = arguments.callee(el.parentElement)
+            return prtEl
+              ? {
+                  xpath: prtEl.xpath + '/' + tagName + '[' + index + ']',
+                  ...ret
+                }
+              : undefined
+          }
+          if (sibling.nodeType === 1 && sibling.tagName === el.tagName) {
+            index++
+          }
+        }
+      }).filter(el => el))
+    `)
+  ) as PageEle[]
+
+  let treeData: TreeProps['treeData'] = []
+  for (const element of elements) {
+    const xpaths = element.xpath.split('/').filter(sec => sec)
+    let subNodes = treeData
+    let lastNode = null
+
+    for (const [idx, xp] of xpaths.entries()) {
+      lastNode = subNodes.find(nd => nd.title === xp)
+      if (lastNode) {
+        subNodes = lastNode.children || []
+      } else {
+        const prefix = xpaths[0].startsWith('*') ? '//' : '/'
+        lastNode = {
+          key: prefix + xpaths.slice(0, idx + 1).join('/'),
+          title: xp,
+          children: []
+        }
+        subNodes.push(lastNode)
+        subNodes = lastNode.children
+      }
+    }
+
+    if (lastNode) {
+      lastNode.element = element
+    }
+  }
+  endpoint.eleDict = Object.fromEntries(elements.map((el: any) => [el.xpath, el]))
+  endpoint.treeData = treeData
+  endpoint.selKeys = []
 }
 </script>
 
