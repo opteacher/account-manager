@@ -99,7 +99,7 @@
     </div>
     <div v-else-if="endpoint.ins.login === 'web'" class="flex-1 flex mt-5">
       <StepSideBar class="mx-2 w-80" :endpoint="endpoint.ins" @click="onGo2NextPage" />
-      <WebPanel
+      <!-- <WebPanel
         ref="pageRef"
         :curURL="endpoint.curURL"
         :collecting="endpoint.collecting"
@@ -108,14 +108,18 @@
         v-model:selKeys="endpoint.selKeys"
         v-model:locEleMod="endpoint.locEleMod"
         @page-loaded="onPageLoaded"
+      /> -->
+      <WebEleSelect
+        ref="pageRef"
+        :curURL="endpoint.curURL"
       />
-      <SlotSideBar
+      <!-- <SlotSideBar
         :collecting="endpoint.collecting"
         :form="endpoint.form"
         :tree-data="endpoint.treeData"
         v-model:selKeys="endpoint.selKeys"
         v-model:locEleMod="endpoint.locEleMod"
-      />
+      /> -->
     </div>
   </div>
   <FormDialog
@@ -162,6 +166,7 @@ import Endpoint from '@/types/endpoint'
 import { WebviewTag } from 'electron'
 import lgnAPI from '@/apis/login'
 import StepSideBar from '@/components/stepSideBar.vue'
+import WebEleSelect from '@lib/components/WebEleSelect.vue'
 
 const placeholders = {
   web: '输入网址（必须带http或https前缀）',
