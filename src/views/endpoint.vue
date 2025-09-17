@@ -64,7 +64,7 @@
             allowClear
             v-model:value="endpoint.form.url"
             :placeholder="placeholders[endpoint.ins.login]"
-            @pressEnter="onPageUpdate"
+            @pressEnter="onPageCommit"
           >
             <template #prefix><RightOutlined /></template>
             <template #clearIcon>
@@ -79,7 +79,7 @@
             <template #icon><KeyOutlined /></template>
             {{ endpoint.form.slots.length ? '已认证' : '认证' }}
           </a-button>
-          <a-button type="primary" @click="onPageUpdate" :loading="endpoint.collecting">
+          <a-button type="primary" @click="onPageCommit" :loading="endpoint.collecting">
             <template #icon><SendOutlined /></template>
             {{ endpoint.ins.login === 'ssh' ? '登录' : '跳转' }}
           </a-button>
@@ -98,7 +98,7 @@
       <SshPanel :curURL="endpoint.curURL" />
     </div>
     <div v-else-if="endpoint.ins.login === 'web'" class="flex-1 flex mt-5">
-      <StepSideBar class="mr-2 w-80" :endpoint="endpoint.ins" @click="onGo2NextPage" />
+      <StepSideBar class="mx-2 w-80" :endpoint="endpoint.ins" @click="onGo2NextPage" />
       <WebPanel
         ref="pageRef"
         :curURL="endpoint.curURL"
@@ -143,7 +143,7 @@ import {
 } from '@ant-design/icons-vue'
 import { h, onMounted, reactive, ref, watch, createVNode } from 'vue'
 import { Button, Modal, notification, TreeProps } from 'ant-design-vue'
-import { newOne, reqPut, setProp, until } from '@lib/utils'
+import { newOne, reqPut, setProp } from '@lib/utils'
 import Mapper, { createByFields } from '@lib/types/mapper'
 import mdlAPI from '@/apis/model'
 import { useRoute, useRouter } from 'vue-router'
@@ -249,16 +249,20 @@ async function refresh() {
   await endpoint.ins.decodeSlots()
   if (endpoint.ins.pages.length) {
     Page.copy(endpoint.ins.pages[endpoint.pgIdx], endpoint.form, true)
-    onPageUpdate()
+    onPageCommit()
   }
   endpoint.edit = false
 }
-function onPageUpdate() {
+function onPageCommit() {
   endpoint.collecting = true
   switch (endpoint.ins.login) {
     case 'web':
       if (endpoint.form.url) {
-        endpoint.curURL = endpoint.form.url
+        if (endpoint.form.url === endpoint.curURL) {
+          pageRef.value.dspPage?.reload()
+        } else {
+          endpoint.curURL = endpoint.form.url
+        }
       } else {
         onPageLoaded()
       }
@@ -373,29 +377,25 @@ function onPageSave() {
 function onGo2BackPage() {
   router.push(`/login_platform/endpoint/${endpoint.ins.key}/edit`)
 }
-async function onGo2NextPage() {
+async function onGo2NextPage(pgIdx?: number) {
   if (!pageRef.value.dspPage) {
     return
   }
-  for (const slot of endpoint.form.slots) {
-    const ele = `document.evaluate('${slot.xpath}', document).iterateNext()`
-    switch (slot.itype) {
-      case 'input':
-        await pageRef.value.dspPage?.executeJavaScript(`${ele}.value = '${slot.value}'`)
-        break
-      case 'click':
-        await pageRef.value.dspPage?.executeJavaScript(`${ele}.click()`)
-        break
+  if (typeof pgIdx !== 'undefined') {
+    for (let i = 0; i < pgIdx; ++i) {
+      await endpoint.ins.pages[i].execSlots(pageRef.value.dspPage)
     }
-    await until(async () => pageRef.value != null && !pageRef.value.dspPage?.isLoading())
+    endpoint.pgIdx = pgIdx
+  } else {
+    await endpoint.form.execSlots(pageRef.value.dspPage)
+    endpoint.pgIdx++
   }
-  endpoint.pgIdx++
   if (endpoint.pgIdx < endpoint.ins.pages.length) {
     Page.copy(endpoint.ins.pages[endpoint.pgIdx], endpoint.form, true)
   } else {
     endpoint.form.reset()
   }
-  onPageUpdate()
+  onPageCommit()
 }
 function onEpTitleChange() {
   endpoint.edit = true

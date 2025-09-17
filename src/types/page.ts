@@ -1,4 +1,5 @@
-import { gnlCpy } from '@lib/utils'
+import { gnlCpy, until } from '@lib/utils'
+import { WebviewTag } from 'electron'
 
 export const itypes = {
   input: '输入',
@@ -74,5 +75,20 @@ export default class Page {
       })
     )
     return this
+  }
+
+  async execSlots(webview?: WebviewTag) {
+    for (const slot of this.slots) {
+      const ele = `document.evaluate('${slot.xpath}', document).iterateNext()`
+      switch (slot.itype) {
+        case 'input':
+          await webview?.executeJavaScript(`${ele}.value = '${slot.value}'`)
+          break
+        case 'click':
+          await webview?.executeJavaScript(`${ele}.click()`)
+          break
+      }
+      await until(async () => !webview?.isLoading())
+    }
   }
 }

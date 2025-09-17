@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import Endpoint from '@/types/endpoint'
 import { computed, PropType, ref } from 'vue'
-import { Steps as ASteps } from 'ant-design-vue'
+import { Steps as ASteps, Step as AStep } from 'ant-design-vue'
 import Page, { itypes } from '@/types/page'
 import { DownloadOutlined, EditOutlined, SelectOutlined } from '@ant-design/icons-vue'
 
 const emit = defineEmits(['click'])
 const props = defineProps({
-  endpoint: { type: Object as PropType<Endpoint>, required: true }
+  endpoint: { type: Object as PropType<Endpoint>, required: true },
+  disabled: { type: Boolean, default: false }
 })
 const items = computed<Page[]>(() =>
   props.endpoint.pages.concat([Page.copy({ url: '执行到下一步' })])
@@ -21,12 +22,20 @@ const iconDict = {
 
 function onStepClick(stepIdx: number) {
   emit('click', stepIdx)
+  current.value = stepIdx
 }
 </script>
 
 <template>
   <a-steps direction="vertical" :current="current" @change="onStepClick">
-    <a-step v-for="page in items" :title="page.url">
+    <a-step
+      v-for="(page, index) in items"
+      :disabled="disabled"
+      :status="current === index ? 'process' : 'wait'"
+    >
+      <template #title>
+        <div class="truncate">{{ page.url }}</div>
+      </template>
       <template #description>
         <ul class="list-none ps-0">
           <li v-for="(slot, index) in page.slots" class="truncate space-x-2">

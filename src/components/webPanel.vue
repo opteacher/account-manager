@@ -1,17 +1,28 @@
 <template>
-  <div class="flex-1">
-    <a-spin v-if="curURL" tip="页面元素收集中..." :spinning="collecting">
-      <webview
-        id="dspPage"
-        class="w-full h-full border-none"
-        :src="curURL"
-        ref="dspPage"
-        disablewebsecurity
-        nodeintegrationinsubframes
-        webpreferences="allowRunningInsecureContent"
-        @did-stop-loading="onPageLoaded"
-        @console-message="(e: any) => console.log(e.message)"
-      />
+  <div class="flex-1 overflow-hidden">
+    <div v-if="curURL" class="h-full relative">
+      <div v-if="true" class="h-full text-center relative z-50 bg-black opacity-10">
+        <a-spin
+          class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+          tip="页面元素收集中..."
+        />
+      </div>
+      <div
+        ref="dspPgCtnr"
+        class="overflow-auto absolute left-0 top-0 bottom-0 right-0"
+        @scroll="onCtnrScroll"
+      >
+        <webview
+          class="w-full h-full border-none overflow-hidden"
+          :src="curURL"
+          ref="dspPage"
+          disablewebsecurity
+          nodeintegrationinsubframes
+          webpreferences="allowRunningInsecureContent"
+          @did-stop-loading="onPageLoaded"
+          @console-message="(e: any) => console.log(e.message)"
+        />
+      </div>
       <a-space
         class="z-50 rounded-md p-1 absolute bottom-5 left-5"
         :style="{ 'background-color': 'rgba(100, 100, 100, 0.5)' }"
@@ -53,18 +64,20 @@
       </a-space>
       <a-dropdown :trigger="['contextmenu']">
         <div
-          class="absolute left-0 right-0"
-          :style="{ height: dspRect.height + 'px', display: maskVsb ? 'block' : 'none' }"
-          @scroll="onPageScroll"
-          @mousemove="onMouseMove"
-          @click="() => emit('update:locEleMod', false)"
-          @mouseup="onMouseUp"
+          class="absolute top-0 left-0 bottom-4 right-4"
+          :style="{ display: maskVsb ? 'block' : 'none' }"
+          @wheel="onMaskScroll"
         >
-          <svg class="w-full" :style="{ height: dspRect.sclHgt + 'px' }">
+          <svg
+            class="w-full h-full"
+            @mousemove="onMouseMove"
+            @click="() => emit('update:locEleMod', false)"
+            @mouseup="onMouseUp"
+          >
             <rect
               v-if="selRect.width"
-              :x="selRect.x"
-              :y="selRect.y"
+              :x="selRect.x + maskOffset[0]"
+              :y="selRect.y + maskOffset[1]"
               :rx="4"
               :ry="4"
               :width="selRect.width"
@@ -80,8 +93,8 @@
               :key="slot.xpath"
               class="cursor-pointer"
               :class="{ invisible: selKeys.includes(slot.xpath) }"
-              :x="eleDict[slot.xpath].rectBox.x"
-              :y="eleDict[slot.xpath].rectBox.y"
+              :x="eleDict[slot.xpath].rectBox.x + maskOffset[0]"
+              :y="eleDict[slot.xpath].rectBox.y + maskOffset[1]"
               :rx="4"
               :ry="4"
               :width="eleDict[slot.xpath].rectBox.width"
@@ -101,8 +114,8 @@
             type="text"
             size="small"
             :style="{
-              top: selRect.y + 'px',
-              left: selRect.x + selRect.width + 5 + 'px'
+              top: maskOffset[1] + selRect.y + 'px',
+              left: maskOffset[0] + selRect.x + selRect.width + 5 + 'px'
             }"
             @click="() => emit('update:selKeys', [])"
           >
@@ -114,8 +127,13 @@
             class="absolute cursor-pointer"
             :class="{ invisible: selKeys.includes(slot.xpath) }"
             :style="{
-              top: eleDict[slot.xpath].rectBox.y + 'px',
-              left: eleDict[slot.xpath].rectBox.x + eleDict[slot.xpath].rectBox.width + 5 + 'px'
+              top: maskOffset[1] + eleDict[slot.xpath].rectBox.y + 'px',
+              left:
+                maskOffset[0] +
+                eleDict[slot.xpath].rectBox.x +
+                eleDict[slot.xpath].rectBox.width +
+                5 +
+                'px'
             }"
             :color="slotStkColor"
             @click="() => emit('update:selKeys', [slot.xpath])"
@@ -130,7 +148,7 @@
           </a-menu>
         </template>
       </a-dropdown>
-    </a-spin>
+    </div>
     <div v-else class="h-full relative">
       <a-typography-paragraph class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
         <ol>
@@ -207,18 +225,22 @@ const dspRect = reactive<{ width: number; height: number; sclWid: number; sclHgt
   sclHgt: 0
 })
 const dspPage = ref<WebviewTag | null>(null)
+const dspPgCtnr = ref<HTMLElement | null>(null)
 const stkClrVsb = ref(false)
 const selStkColor = ref('red')
 const slotStkColor = ref('green')
 const maskVsb = ref(true)
-defineExpose({ dspPage })
+const maskOffset = reactive([0, 0])
 const delSlotVsb = ref(false)
 const delSlotNexts = ref(false)
+defineExpose({ dspPage })
 
 onMounted(async () => {
   await until(async () => dspPage.value !== null)
-  await dspPage.value?.executeJavaScript(
-    'window.addEventListener("load", () => console.log("page-loaded"))'
+  dspPage.value?.addEventListener('dom-ready', () =>
+    dspPage.value?.executeJavaScript(
+      'window.addEventListener("load", () => console.log("page-loaded"))'
+    )
   )
 })
 
@@ -290,5 +312,13 @@ function poiOnEle(x: number, y: number): PageEle | null {
     }
   }
   return minRect.el
+}
+function onMaskScroll(e: WheelEvent) {
+  dspPgCtnr.value?.scroll({ top: dspPgCtnr.value?.scrollTop + e.deltaY, behavior: 'smooth' })
+}
+function onCtnrScroll(e: any) {
+  console.log(e)
+  maskOffset[1] = (e.target as HTMLElement).scrollTop
+  maskOffset[0] = (e.target as HTMLElement).scrollLeft
 }
 </script>

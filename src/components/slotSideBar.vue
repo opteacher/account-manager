@@ -106,7 +106,7 @@ import { createVNode, PropType, reactive, ref, watch } from 'vue'
 import Page, { Slot } from '@/types/page'
 import { setProp } from '@lib/utils'
 
-const emit = defineEmits(['update:selKeys', 'update:locEleMod'])
+const emit = defineEmits(['update:selKeys', 'update:locEleMod', 'submit'])
 const props = defineProps({
   collecting: { type: Boolean, required: true },
   form: { type: Object as PropType<Page>, required: true },
