@@ -99,27 +99,43 @@
     </div>
     <div v-else-if="endpoint.ins.login === 'web'" class="flex-1 flex mt-5">
       <StepSideBar class="mx-2 w-80" :endpoint="endpoint.ins" @click="onGo2NextPage" />
-      <!-- <WebPanel
-        ref="pageRef"
-        :curURL="endpoint.curURL"
-        :collecting="endpoint.collecting"
-        :form="endpoint.form"
-        :eleDict="endpoint.eleDict"
-        v-model:selKeys="endpoint.selKeys"
-        v-model:locEleMod="endpoint.locEleMod"
-        @page-loaded="onPageLoaded"
-      /> -->
       <WebEleSelect
         ref="pageRef"
         :curURL="endpoint.curURL"
-      />
-      <!-- <SlotSideBar
-        :collecting="endpoint.collecting"
-        :form="endpoint.form"
-        :tree-data="endpoint.treeData"
-        v-model:selKeys="endpoint.selKeys"
-        v-model:locEleMod="endpoint.locEleMod"
-      /> -->
+        :emitter="endpoint.emitter"
+        :hlEles="endpoint.form.slots.map(slot => slot.xpath)"
+      >
+        <template #empty>
+          <ol>
+            <li>
+              <a-typography-text type="secondary">登录类型选择【网页登录】</a-typography-text>
+            </li>
+            <li>
+              <a-typography-text type="secondary">在【地址栏】输入网址</a-typography-text>
+            </li>
+            <li>
+              <a-typography-text type="secondary">
+                点击【跳转】加载网页并收集网页元素
+              </a-typography-text>
+            </li>
+            <li>
+              <a-typography-text type="secondary">给登录表单的元素绑定账户信息</a-typography-text>
+            </li>
+            <li>
+              <a-typography-text type="secondary">
+                点击【保存】绑定网页元素与账户信息
+              </a-typography-text>
+            </li>
+          </ol>
+        </template>
+        <template #sideBottom>
+          <SlotSideBar
+            :form="endpoint.form"
+            :collecting="endpoint.collecting"
+            v-model:selKeys="endpoint.selKeys"
+          />
+        </template>
+      </WebEleSelect>
     </div>
   </div>
   <FormDialog
@@ -137,16 +153,13 @@ import {
   RightOutlined,
   CloseCircleFilled,
   KeyOutlined,
-  ExclamationCircleOutlined,
-  CheckCircleOutlined,
   BorderlessTableOutlined,
   ArrowLeftOutlined,
   EditOutlined,
   CheckOutlined,
   CloseOutlined
 } from '@ant-design/icons-vue'
-import { h, onMounted, reactive, ref, watch, createVNode } from 'vue'
-import { Button, Modal, notification, TreeProps } from 'ant-design-vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import { newOne, reqPut, setProp } from '@lib/utils'
 import Mapper, { createByFields } from '@lib/types/mapper'
 import mdlAPI from '@/apis/model'
@@ -157,9 +170,7 @@ import { TinyEmitter } from 'tiny-emitter'
 import { Cond } from '@lib/types'
 import AuthSSH from '@/types/authSSH'
 import SshPanel from '@/components/sshPanel.vue'
-import WebPanel from '@/components/webPanel.vue'
 import SlotSideBar from '@/components/slotSideBar.vue'
-import PageEle from '@/types/pageEle'
 import { data as models } from '@/jsons/models.json'
 import Field from '@lib/types/field'
 import Endpoint from '@/types/endpoint'
@@ -210,11 +221,7 @@ const endpoint = reactive<{
   form: Page
   collecting: boolean
   curURL: string
-  eleDict: Record<string, PageEle>
-  treeData: TreeProps['treeData']
-  expKeys: (string | number)[]
   selKeys: (string | number)[]
-  locEleMod: boolean
   emitter: TinyEmitter
   nextPage: boolean
   pgIdx: number
@@ -225,11 +232,7 @@ const endpoint = reactive<{
   form: Page.copy({ url: 'http://124.28.221.82:8096' }),
   collecting: false,
   curURL: '',
-  eleDict: {},
-  treeData: [],
-  expKeys: [],
   selKeys: [],
-  locEleMod: false,
   emitter: new TinyEmitter(),
   nextPage: false,
   pgIdx: 0
@@ -264,12 +267,12 @@ function onPageCommit() {
     case 'web':
       if (endpoint.form.url) {
         if (endpoint.form.url === endpoint.curURL) {
-          pageRef.value.dspPage?.reload()
+          endpoint.emitter.emit('reload', true)
         } else {
           endpoint.curURL = endpoint.form.url
         }
       } else {
-        onPageLoaded()
+        endpoint.emitter.emit('reload')
       }
       break
     case 'ssh':
@@ -345,40 +348,6 @@ function onAuthSshShow() {
     }
   })
 }
-function onPageSave() {
-  Modal.confirm({
-    title: '确定插入该页面吗？',
-    icon: createVNode(ExclamationCircleOutlined),
-    content: createVNode('div', null, '该页面会追加到当前登录端的页面流最后'),
-    async onOk() {
-      const pgKey = endpoint.form.key === -1 ? 'n' : endpoint.form.key
-      await mdlAPI.link('endpoint', endpoint.ins.key, 'page', pgKey, true, {
-        type: 'api',
-        axiosConfig: { data: endpoint.form }
-      })
-      const key = `open${Date.now()}`
-      notification.open({
-        icon: createVNode(CheckCircleOutlined, { style: { color: '#52c41a' } }),
-        message: createVNode('h3', null, '页面保存成功！'),
-        description: '是否立即执行页面操作并跳转到下个页面继续操作？',
-        duration: null,
-        key,
-        btn: () =>
-          h(
-            Button,
-            {
-              type: 'primary',
-              onClick: () => {
-                notification.close(key)
-                onGo2NextPage()
-              }
-            },
-            { default: () => '操作并跳转' }
-          )
-      })
-    }
-  })
-}
 function onGo2BackPage() {
   router.push(`/login_platform/endpoint/${endpoint.ins.key}/edit`)
 }
@@ -409,77 +378,6 @@ function onEpTitleChange() {
 async function onEpTitleSave() {
   await reqPut('endpoint', endpoint.ins.key, { name: endpoint.edtName })
   await refresh()
-}
-async function onPageLoaded() {
-  const elements = JSON.parse(
-    await pageRef.value.dspPage?.executeJavaScript(`
-      JSON.stringify(Array.from(document.getElementsByTagName('*')).map(function(el) {
-        const tagName = el.tagName.toLowerCase()
-        const ret = {
-          tagName,
-          clazz: el.className,
-          rectBox: el.getBoundingClientRect().toJSON()
-        }
-        if (['style', 'script', 'link', 'meta', 'head', 'header', 'title'].includes(tagName)) {
-          return
-        }
-        if (el === document.body) {
-          return { xpath: '/html/body', ...ret }
-        }
-        if (el.id !== '') {
-          return { xpath: '//*[@id="' + el.id + '"]', id: el.id, ...ret }
-        }
-        let index = 1
-        const siblings = el.parentElement && el.parentElement.children
-          ? el.parentElement.children : []
-        for (const sibling of siblings) {
-          if (sibling === el) {
-            const prtEl = arguments.callee(el.parentElement)
-            return prtEl
-              ? {
-                  xpath: prtEl.xpath + '/' + tagName + '[' + index + ']',
-                  ...ret
-                }
-              : undefined
-          }
-          if (sibling.nodeType === 1 && sibling.tagName === el.tagName) {
-            index++
-          }
-        }
-      }).filter(el => el))
-    `)
-  ) as PageEle[]
-
-  let treeData: TreeProps['treeData'] = []
-  for (const element of elements) {
-    const xpaths = element.xpath.split('/').filter(sec => sec)
-    let subNodes = treeData
-    let lastNode = null
-
-    for (const [idx, xp] of xpaths.entries()) {
-      lastNode = subNodes.find(nd => nd.title === xp)
-      if (lastNode) {
-        subNodes = lastNode.children || []
-      } else {
-        const prefix = xpaths[0].startsWith('*') ? '//' : '/'
-        lastNode = {
-          key: prefix + xpaths.slice(0, idx + 1).join('/'),
-          title: xp,
-          children: []
-        }
-        subNodes.push(lastNode)
-        subNodes = lastNode.children
-      }
-    }
-
-    if (lastNode) {
-      lastNode.element = element
-    }
-  }
-  endpoint.eleDict = Object.fromEntries(elements.map((el: any) => [el.xpath, el]))
-  endpoint.treeData = treeData
-  endpoint.selKeys = []
-  endpoint.collecting = false
 }
 </script>
 
