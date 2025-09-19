@@ -1,6 +1,6 @@
 <template>
   <div class="h-full flex flex-col">
-    <a-page-header @back="onGo2BackPage">
+    <a-page-header>
       <template #title>
         <a-space>
           <a-typography-title class="mb-0" :level="3">登录端 /</a-typography-title>
@@ -98,12 +98,24 @@
       <SshPanel :curURL="endpoint.curURL" />
     </div>
     <div v-else-if="endpoint.ins.login === 'web'" class="flex-1 flex mt-5">
-      <StepSideBar class="mx-2 w-80" :endpoint="endpoint.ins" @click="onGo2NextPage" />
-      <WebEleSelect
+      <StepSideBar class="mx-2" :endpoint="endpoint.ins" @click="onGo2NextPage">
+        <template #bottom>
+          <SlotSideBar
+            :form="endpoint.form"
+            :collecting="endpoint.collecting"
+            v-model:selKeys="endpoint.selKeys"
+            @slotDel="refresh"
+          />
+        </template>
+      </StepSideBar>
+      <PgEleSelect
         ref="pageRef"
+        v-model:loading="endpoint.collecting"
         :curURL="endpoint.curURL"
         :emitter="endpoint.emitter"
         :hlEles="endpoint.form.slots.map(slot => slot.xpath)"
+        :sbarWid="300"
+        @eleClick="key => (endpoint.selKeys = key ? [key] : [])"
       >
         <template #empty>
           <ol>
@@ -128,14 +140,7 @@
             </li>
           </ol>
         </template>
-        <template #sideBottom>
-          <SlotSideBar
-            :form="endpoint.form"
-            :collecting="endpoint.collecting"
-            v-model:selKeys="endpoint.selKeys"
-          />
-        </template>
-      </WebEleSelect>
+      </PgEleSelect>
     </div>
   </div>
   <FormDialog
@@ -177,7 +182,7 @@ import Endpoint from '@/types/endpoint'
 import { WebviewTag } from 'electron'
 import lgnAPI from '@/apis/login'
 import StepSideBar from '@/components/stepSideBar.vue'
-import WebEleSelect from '@lib/components/WebEleSelect.vue'
+import PgEleSelect from '@lib/components/PgEleSelect.vue'
 
 const placeholders = {
   web: '输入网址（必须带http或https前缀）',
@@ -237,8 +242,8 @@ const endpoint = reactive<{
   nextPage: false,
   pgIdx: 0
 })
-const pageRef = ref<{ dspPage: WebviewTag | null }>({
-  dspPage: null
+const pageRef = ref<{ webviewRef: WebviewTag | null }>({
+  webviewRef: null
 })
 const authSSh = reactive({
   emitter: new TinyEmitter()
@@ -352,16 +357,16 @@ function onGo2BackPage() {
   router.push(`/login_platform/endpoint/${endpoint.ins.key}/edit`)
 }
 async function onGo2NextPage(pgIdx?: number) {
-  if (!pageRef.value.dspPage) {
+  if (!pageRef.value.webviewRef) {
     return
   }
   if (typeof pgIdx !== 'undefined') {
     for (let i = 0; i < pgIdx; ++i) {
-      await endpoint.ins.pages[i].execSlots(pageRef.value.dspPage)
+      await endpoint.ins.pages[i].execSlots(pageRef.value.webviewRef)
     }
     endpoint.pgIdx = pgIdx
   } else {
-    await endpoint.form.execSlots(pageRef.value.dspPage)
+    await endpoint.form.execSlots(pageRef.value.webviewRef)
     endpoint.pgIdx++
   }
   if (endpoint.pgIdx < endpoint.ins.pages.length) {

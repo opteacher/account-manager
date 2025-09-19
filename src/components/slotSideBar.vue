@@ -1,11 +1,11 @@
 <template>
   <a-collapse v-model:activeKey="actKey" :bordered="false">
-    <a-collapse-panel v-if="props.selKeys.length" key="1">
+    <a-collapse-panel v-if="selKeys.length" key="1">
       <template #header>
         <a-tooltip>
-          <template #title>{{ props.selKeys[0] }}</template>
+          <template #title>{{ selKeys[0] }}</template>
           <p class="mb-0 w-64 whitespace-nowrap overflow-hidden text-ellipsis">
-            {{ props.selKeys[0] }}
+            {{ selKeys[0] }}
           </p>
         </a-tooltip>
       </template>
@@ -33,19 +33,19 @@
         <CloseOutlined @click="() => emit('update:selKeys', [])" />
       </template>
     </a-collapse-panel>
-    <a-collapse-panel v-else-if="props.form.slots.length" key="2">
+    <a-collapse-panel v-else-if="form.slots.length" key="2">
       <template #header>
         已关联槽&nbsp;
-        <a-tag v-if="props.form.slots.length" color="#f50">
-          {{ props.form.slots.length }}
+        <a-tag v-if="form.slots.length" color="#f50">
+          {{ form.slots.length }}
         </a-tag>
       </template>
-      <a-list item-layout="horizontal">
-        <template v-for="slot in props.form.slots" :key="slot.xpath">
+      <a-list class="slot-list" item-layout="horizontal">
+        <template v-for="slot in form.slots" :key="slot.xpath">
           <a-list-item class="p-0">
             <a-list-item-meta>
               <template #title>
-                <a class="w-32 truncate" @click="() => emit('update:selKeys', [slot.xpath])">
+                <a class="truncate" @click="() => emit('update:selKeys', [slot.xpath])">
                   {{ slot.xpath }}
                 </a>
               </template>
@@ -54,7 +54,7 @@
             <div v-else>{{ slot.value }}</div>
             <template #actions>
               <a-button size="small" type="text" danger @click="() => onSlotRemove(slot.xpath)">
-                <template #icon><DeleteOutlined /></template>
+                <template #icon><MinusCircleOutlined /></template>
               </a-button>
             </template>
           </a-list-item>
@@ -71,7 +71,7 @@ import {
   CloseOutlined,
   LockOutlined,
   UnlockOutlined,
-  DeleteOutlined,
+  MinusCircleOutlined,
   ExclamationCircleOutlined
 } from '@ant-design/icons-vue'
 import { Cond } from '@lib/types'
@@ -80,7 +80,7 @@ import { createVNode, PropType, reactive, ref, watch } from 'vue'
 import Page, { Slot } from '@/types/page'
 import { setProp } from '@lib/utils'
 
-const emit = defineEmits(['update:selKeys', 'submit'])
+const emit = defineEmits(['update:selKeys', 'slotDel', 'submit'])
 const props = defineProps({
   collecting: { type: Boolean, required: true },
   form: { type: Object as PropType<Page>, required: true },
@@ -156,9 +156,12 @@ function onSlotRemove(xpath: string) {
     title: '确定删除该槽？',
     icon: createVNode(ExclamationCircleOutlined),
     onOk() {
-      props.form.slots.splice(
-        props.form.slots.findIndex(slot => slot.xpath === xpath),
-        1
+      emit(
+        'slotDel',
+        props.form.slots.splice(
+          props.form.slots.findIndex(slot => slot.xpath === xpath),
+          1
+        )
       )
     }
   })
@@ -169,3 +172,12 @@ function onValEncSwitch(formState: any) {
   setProp(slotMapper, 'value.type', formState.valEnc ? 'Password' : 'Input')
 }
 </script>
+
+<style>
+.slot-list .ant-list-item-meta-title {
+  @apply truncate;
+}
+.slot-list .ant-list-item-action {
+  @apply ms-0 !important;
+}
+</style>
