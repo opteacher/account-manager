@@ -98,7 +98,7 @@
       <SshPanel :curURL="endpoint.curURL" />
     </div>
     <div v-else-if="endpoint.ins.login === 'web'" class="flex-1 flex mt-5">
-      <StepSideBar class="mx-2" :endpoint="endpoint.ins" @click="onGo2NextPage">
+      <StepSideBar :endpoint="endpoint.ins" @click="onGo2NextPage">
         <template #bottom>
           <SlotSideBar
             :form="endpoint.form"
