@@ -16,9 +16,8 @@ axios.interceptors.request.use(
   }
 )
 
-export default async (app: App<Element>) => {
+export async function detectNetwork() {
   if (!import.meta.env.PROD) {
-    axios.defaults.baseURL = undefined
     return
   }
   for (const url of [
@@ -30,11 +29,14 @@ export default async (app: App<Element>) => {
       await axios.get(url, { timeout: 1000 })
     } catch (e: any) {
       if (e.status) {
-        axios.defaults.baseURL = e.config.url
-        break
+        return e.config.url
       }
     }
   }
+}
+
+export default async (app: App<Element>) => {
+  axios.defaults.baseURL = await detectNetwork()
   app.use(VueAxios, axios)
   app.provide('axios', app.config.globalProperties.axios)
 }

@@ -62,7 +62,7 @@
           <a-input
             class="flex-1 min-w-[30vw]"
             allowClear
-            v-model:value="endpoint.form.url"
+            v-model:value="endpoint.page.url"
             :placeholder="placeholders[endpoint.ins.login]"
             @pressEnter="onPageCommit"
           >
@@ -73,11 +73,11 @@
           </a-input>
           <a-button
             v-if="endpoint.ins.login === 'ssh'"
-            :type="endpoint.form.slots.length ? 'primary' : 'default'"
+            :type="endpoint.page.slots.length ? 'primary' : 'default'"
             @click="onAuthSshShow"
           >
             <template #icon><KeyOutlined /></template>
-            {{ endpoint.form.slots.length ? '已认证' : '认证' }}
+            {{ endpoint.page.slots.length ? '已认证' : '认证' }}
           </a-button>
           <a-button type="primary" @click="onPageCommit" :loading="endpoint.collecting">
             <template #icon><SendOutlined /></template>
@@ -101,10 +101,11 @@
       <StepSideBar :endpoint="endpoint.ins" @click="onGo2NextPage">
         <template #bottom>
           <SlotSideBar
-            :form="endpoint.form"
+            :slots="endpoint.page.slots"
             :collecting="endpoint.collecting"
             v-model:selKeys="endpoint.selKeys"
             @slotDel="refresh"
+            @submit="onSlotsSave"
           />
         </template>
       </StepSideBar>
@@ -113,9 +114,9 @@
         v-model:loading="endpoint.collecting"
         :curURL="endpoint.curURL"
         :emitter="endpoint.emitter"
-        :hlEles="endpoint.form.slots.map(slot => slot.xpath)"
+        :hlEles="endpoint.page.slots.map(slot => slot.xpath)"
         :sbarWid="300"
-        @eleClick="key => (endpoint.selKeys = key ? [key] : [])"
+        v-model:selKeys="endpoint.selKeys"
       >
         <template #empty>
           <ol>
@@ -168,7 +169,7 @@ import { onMounted, reactive, ref, watch } from 'vue'
 import { newOne, reqPut, setProp } from '@lib/utils'
 import Mapper, { createByFields } from '@lib/types/mapper'
 import mdlAPI from '@/apis/model'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import Page, { Slot } from '@/types/page'
 import FormDialog from '@lib/components/FormDialog.vue'
 import { TinyEmitter } from 'tiny-emitter'
@@ -183,6 +184,7 @@ import { WebviewTag } from 'electron'
 import lgnAPI from '@/apis/login'
 import StepSideBar from '@/components/stepSideBar.vue'
 import PgEleSelect from '@lib/components/PgEleSelect.vue'
+import { detectNetwork } from '@/apis'
 
 const placeholders = {
   web: '输入网址（必须带http或https前缀）',
@@ -218,15 +220,14 @@ const authMapper = new Mapper({
   }
 })
 const route = useRoute()
-const router = useRouter()
 const endpoint = reactive<{
   ins: Endpoint
   edit: boolean
   edtName: string
-  form: Page
+  page: Page
   collecting: boolean
   curURL: string
-  selKeys: (string | number)[]
+  selKeys: string[]
   emitter: TinyEmitter
   nextPage: boolean
   pgIdx: number
@@ -234,7 +235,7 @@ const endpoint = reactive<{
   ins: new Endpoint(),
   edit: false,
   edtName: '',
-  form: Page.copy({ url: 'http://124.28.221.82:8096' }),
+  page: Page.copy({ url: 'http://124.28.221.82:8096' }),
   collecting: false,
   curURL: '',
   selKeys: [],
@@ -261,20 +262,20 @@ async function refresh() {
   Endpoint.copy(epInf, endpoint.ins, true)
   await endpoint.ins.decodeSlots()
   if (endpoint.ins.pages.length) {
-    Page.copy(endpoint.ins.pages[endpoint.pgIdx], endpoint.form, true)
-    onPageCommit()
+    Page.copy(endpoint.ins.pages[endpoint.pgIdx], endpoint.page, true)
+    await onPageCommit()
   }
   endpoint.edit = false
 }
-function onPageCommit() {
+async function onPageCommit() {
   endpoint.collecting = true
   switch (endpoint.ins.login) {
     case 'web':
-      if (endpoint.form.url) {
-        if (endpoint.form.url === endpoint.curURL) {
+      if (endpoint.page.url) {
+        if (endpoint.page.url === endpoint.curURL) {
           endpoint.emitter.emit('reload', true)
         } else {
-          endpoint.curURL = endpoint.form.url
+          endpoint.curURL = endpoint.page.url
         }
       } else {
         endpoint.emitter.emit('reload')
@@ -282,15 +283,16 @@ function onPageCommit() {
       break
     case 'ssh':
       {
-        const [host, port] = endpoint.form.url.split(':')
-        const sshHost = import.meta.env.VITE_BASE_HOST
+        const [host, port] = endpoint.page.url.split(':')
+        const baseURL = (await detectNetwork()) as string
+        const sshHost = baseURL ? baseURL.substring(0, baseURL.lastIndexOf(':')) : ''
         const sshPort = import.meta.env.VITE_SSH_PORT
-        const unSlot = endpoint.form.slots.find(slot => slot.xpath === 'username')
+        const unSlot = endpoint.page.slots.find(slot => slot.xpath === 'username')
         const username = unSlot ? unSlot.value : 'root'
-        const pwdSlot = endpoint.form.slots.find(slot => slot.xpath === 'password')
+        const pwdSlot = endpoint.page.slots.find(slot => slot.xpath === 'password')
         const password = pwdSlot ? pwdSlot.value : undefined
         endpoint.curURL = [
-          `http://${sshHost}:${sshPort}/?arg=-c&arg=`,
+          `${sshHost}:${sshPort}/?arg=-c&arg=`,
           password ? `sshpass%20-p${password}%20ssh` : 'ssh',
           port ? `-p${port}` : '',
           '-o%20StrictHostKeyChecking=no',
@@ -302,30 +304,30 @@ function onPageCommit() {
   }
 }
 async function onEndpointSave(_form: any, next: Function) {
-  const newEp = await mdlAPI.add('endpoint', endpoint.form, { copy: Endpoint.copy })
+  const newEp = await mdlAPI.add('endpoint', endpoint.ins, { copy: Endpoint.copy })
   const { payload } = await lgnAPI.verify()
   await mdlAPI.link('account', payload.sub, 'fkEndpoints', newEp.key)
-  endpoint.form.reset()
+  endpoint.page.reset()
   next()
   await refresh()
 }
 function onLgnTypeChange(lgnType: 'ssh' | 'web') {
-  endpoint.form.reset()
+  endpoint.page.reset()
   endpoint.ins.login = lgnType
   endpoint.curURL = ''
 }
 function onAuthSshSubmit(authSSH: AuthSSH, next: Function) {
-  endpoint.form.slots = []
+  endpoint.page.slots = []
   switch (authSSH.atype) {
     case 'basic':
-      endpoint.form.slots.push(
+      endpoint.page.slots.push(
         Slot.copy({
           xpath: 'username',
           value: authSSH.username,
           valEnc: false
         })
       )
-      endpoint.form.slots.push(
+      endpoint.page.slots.push(
         Slot.copy({
           xpath: 'password',
           value: authSSH.password,
@@ -334,7 +336,7 @@ function onAuthSshSubmit(authSSH: AuthSSH, next: Function) {
       )
       break
     case 'idfile':
-      endpoint.form.slots.push(
+      endpoint.page.slots.push(
         Slot.copy({
           xpath: 'idRsaFile',
           value: authSSH.idRsaFile
@@ -349,12 +351,9 @@ function onAuthSshShow() {
     show: true,
     object: {
       atype: 'basic',
-      ...Object.fromEntries(endpoint.form.slots.map(slot => [slot.xpath, slot.value]))
+      ...Object.fromEntries(endpoint.page.slots.map(slot => [slot.xpath, slot.value]))
     }
   })
-}
-function onGo2BackPage() {
-  router.push(`/login_platform/endpoint/${endpoint.ins.key}/edit`)
 }
 async function onGo2NextPage(pgIdx?: number) {
   if (!pageRef.value.webviewRef) {
@@ -366,15 +365,15 @@ async function onGo2NextPage(pgIdx?: number) {
     }
     endpoint.pgIdx = pgIdx
   } else {
-    await endpoint.form.execSlots(pageRef.value.webviewRef)
+    await endpoint.page.execSlots(pageRef.value.webviewRef)
     endpoint.pgIdx++
   }
   if (endpoint.pgIdx < endpoint.ins.pages.length) {
-    Page.copy(endpoint.ins.pages[endpoint.pgIdx], endpoint.form, true)
+    Page.copy(endpoint.ins.pages[endpoint.pgIdx], endpoint.page, true)
   } else {
-    endpoint.form.reset()
+    endpoint.page.reset()
   }
-  onPageCommit()
+  await onPageCommit()
 }
 function onEpTitleChange() {
   endpoint.edit = true
@@ -382,6 +381,16 @@ function onEpTitleChange() {
 }
 async function onEpTitleSave() {
   await reqPut('endpoint', endpoint.ins.key, { name: endpoint.edtName })
+  await refresh()
+}
+async function onSlotsSave(slots: Slot[]) {
+  endpoint.page.slots = slots
+  const pgKey = endpoint.page.key === -1 ? 'n' : endpoint.page.key
+  await mdlAPI.link('endpoint', endpoint.ins.key, 'page', pgKey, true, {
+    type: 'api',
+    axiosConfig: { data: endpoint.page }
+  })
+  endpoint.selKeys = []
   await refresh()
 }
 </script>

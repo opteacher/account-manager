@@ -20,7 +20,11 @@
           </a-typography-title>
         </a-space>
         <div class="flex flex-1 leading-16 justify-between">
-          <div />
+          <a-menu mode="horizontal" :style="{ lineHeight: '64px' }" @click="onHdMnuClick">
+            <a-menu-item key="reload">
+              <template #icon><ReloadOutlined /></template>刷新
+            </a-menu-item>
+          </a-menu>
           <a-popover v-if="(project.auth as any).model" placement="bottomRight">
             <template #content>
               <a-button type="primary" danger ghost @click="onLogoutClick">退出</a-button>
@@ -90,7 +94,8 @@ import {
   UserOutlined,
   MenuUnfoldOutlined,
   MenuFoldOutlined,
-  FormOutlined
+  FormOutlined,
+  ReloadOutlined
 } from '@ant-design/icons-vue'
 import api from '@/apis/model'
 import { rmvStartsOf } from '@lib/utils'
@@ -141,6 +146,9 @@ function onLogoutClick() {
 }
 function getIconCompo(name: string): Component {
   return (antdIcons as Record<string, Component>)[name]
+}
+function onHdMnuClick() {
+  location.reload()
 }
 </script>
 

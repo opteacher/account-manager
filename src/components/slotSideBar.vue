@@ -33,21 +33,24 @@
         <CloseOutlined @click="() => emit('update:selKeys', [])" />
       </template>
     </a-collapse-panel>
-    <a-collapse-panel v-else-if="form.slots.length" key="2">
+    <a-collapse-panel v-else-if="slots.length" key="2">
       <template #header>
         已关联槽&nbsp;
-        <a-tag v-if="form.slots.length" color="#f50">
-          {{ form.slots.length }}
+        <a-tag v-if="slots.length" color="#f50">
+          {{ slots.length }}
         </a-tag>
       </template>
       <a-list class="slot-list" item-layout="horizontal">
-        <template v-for="slot in form.slots" :key="slot.xpath">
+        <template v-for="slot in slots" :key="slot.xpath">
           <a-list-item class="p-0">
             <a-list-item-meta>
               <template #title>
-                <a class="truncate" @click="() => emit('update:selKeys', [slot.xpath])">
-                  {{ slot.xpath }}
-                </a>
+                <a-tooltip>
+                  <template #title>{{ slot.xpath }}</template>
+                  <a class="truncate" @click="() => emit('update:selKeys', [slot.xpath])">
+                    {{ slot.xpath }}
+                  </a>
+                </a-tooltip>
               </template>
             </a-list-item-meta>
             <div v-if="slot.valEnc">●●●●</div>
@@ -77,13 +80,13 @@ import {
 import { Cond } from '@lib/types'
 import { Modal } from 'ant-design-vue'
 import { createVNode, PropType, reactive, ref, watch } from 'vue'
-import Page, { Slot } from '@/types/page'
+import { Slot } from '@/types/page'
 import { setProp } from '@lib/utils'
 
 const emit = defineEmits(['update:selKeys', 'slotDel', 'submit'])
 const props = defineProps({
   collecting: { type: Boolean, required: true },
-  form: { type: Object as PropType<Page>, required: true },
+  slots: { type: Array as PropType<Slot[]>, required: true },
   selKeys: { type: Array as PropType<(string | number)[]>, required: true }
 })
 const slotMapper = reactive(
@@ -130,7 +133,7 @@ watch(
       return
     }
     Slot.copy(
-      props.form.slots.find(slot => slot.xpath === props.selKeys[0]),
+      props.slots.find(slot => slot.xpath === props.selKeys[0]),
       slotForm,
       true
     )
@@ -142,14 +145,14 @@ watch(
 )
 
 function onSlotSave() {
-  const idSlot = props.form.slots.find(slot => slot.xpath === props.selKeys[0])
+  const idSlot = props.slots.find(slot => slot.xpath === props.selKeys[0])
   if (idSlot) {
     Slot.copy(slotForm, idSlot, true)
   } else {
-    props.form.slots.push(Slot.copy(slotForm))
+    props.slots.push(Slot.copy(slotForm))
   }
   slotForm.reset()
-  emit('update:selKeys', [])
+  emit('submit', props.slots)
 }
 function onSlotRemove(xpath: string) {
   Modal.confirm({
@@ -158,8 +161,8 @@ function onSlotRemove(xpath: string) {
     onOk() {
       emit(
         'slotDel',
-        props.form.slots.splice(
-          props.form.slots.findIndex(slot => slot.xpath === xpath),
+        props.slots.splice(
+          props.slots.findIndex(slot => slot.xpath === xpath),
           1
         )
       )

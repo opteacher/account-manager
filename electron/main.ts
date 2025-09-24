@@ -85,6 +85,7 @@ function createWindow() {
 
             for (const slot of pgInfo.slots) {
               const ele = await page.waitForXPath(slot.xpath)
+              await page.waitForTimeout(1000)
               switch (slot.itype) {
                 case 'input':
                   await ele?.type(slot.value)
