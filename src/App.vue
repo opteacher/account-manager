@@ -110,7 +110,10 @@ const sideKeys = reactive<string[]>([])
 const openKeys = reactive<string[]>([])
 const collapsed = ref(false)
 
-onMounted(async () => {
+onMounted(refresh)
+router.beforeEach(to => refresh(to.path))
+
+async function refresh(toPath?: string) {
   const mdls = models.data.filter((model: any) => model.disp)
   for (const mname of mdls.map(mdl => mdl.name)) {
     try {
@@ -123,10 +126,8 @@ onMounted(async () => {
     }
   }
   sdNavMdls.value = mdls.map(mdl => Model.copy(mdl))
-  actSideKeys(route.path)
-})
-router.beforeEach(to => actSideKeys(to.path))
-
+  actSideKeys(toPath || route.path)
+}
 function actSideKeys(path: string) {
   const subPath = rmvStartsOf(path, `/${project.name}/`)
   let fixPath = subPath

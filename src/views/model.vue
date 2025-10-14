@@ -126,7 +126,7 @@ import { UploadChangeParam } from 'ant-design-vue'
 
 const route = useRoute()
 const router = useRouter()
-const mname = ref<string>('')
+const mname = computed<string>(() => route.params.mname as string)
 const model = reactive<Model>(new Model())
 const table = reactive<Table>(new Table())
 const columns = ref<Column[]>([])
@@ -154,7 +154,9 @@ onMounted(refresh)
 watch(() => route.params.mname, refresh)
 
 async function refresh() {
-  mname.value = route.params.mname as string
+  if (!mname.value || typeof mname.value === 'undefined') {
+    return
+  }
   Model.copy(
     models.data.find((mdl: any) => mdl.name === mname.value),
     model,
