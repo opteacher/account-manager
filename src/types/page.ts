@@ -1,3 +1,4 @@
+import useGlobalStore from '@/stores/global'
 import { gnlCpy, until } from '@lib/utils'
 import { WebviewTag } from 'electron'
 
@@ -67,7 +68,7 @@ export default class Page {
         if (slot.valEnc) {
           slot.value = await window.ipcRenderer.invoke(
             'decode-value',
-            localStorage.getItem('token'),
+            useGlobalStore().token,
             JSON.stringify(slot.value)
           )
         }

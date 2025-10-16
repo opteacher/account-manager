@@ -1,10 +1,11 @@
+import useGlobalStore from '@/stores/global'
 import axios from 'axios'
 import { App } from 'vue'
 import VueAxios from 'vue-axios'
 
 axios.interceptors.request.use(
   function (config) {
-    const token = `Bearer ${localStorage.getItem('token')}`
+    const token = `Bearer ${useGlobalStore().token}`
     if (token) {
       config.headers.setAuthorization(token)
     }
@@ -26,12 +27,11 @@ export async function detectNetwork() {
     import.meta.env.VITE_GZW_URL
   ]) {
     try {
-      await axios.get(url, { timeout: 1000 })
+      await axios.get(`${url}/${import.meta.env.VITE_PJT}/mdl/v1`, { timeout: 1000 })
     } catch (e: any) {
-      if (e.status) {
-        return e.config.url
-      }
+      continue
     }
+    return url
   }
 }
 

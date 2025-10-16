@@ -53,7 +53,22 @@
       <SlotsTable :record="record" />
     </template>
     <template v-if="route.path === `/${project.name}/endpoint`" #operaBefore="{ record }">
-      <a-button type="primary" size="small" @click.stop="() => onLoginClick(record)">登录</a-button>
+      <a-space>
+        <a-button type="primary" size="small" @click.stop="() => onLoginClick(record)">
+          登录
+        </a-button>
+        <a-upload
+          v-if="record.login === 'ssh'"
+          :showUploadList="false"
+          :directory="upload.isFolder"
+          :beforeUpload="(file: File) => onUpldFlsChange(file, record)"
+        >
+          <a-input-group compact>
+            <a-button size="small" @click="() => (upload.isFolder = false)">上传文件</a-button>
+            <a-button size="small" @click="() => (upload.isFolder = true)">夹</a-button>
+          </a-input-group>
+        </a-upload>
+      </a-space>
     </template>
     <template v-if="route.path === `/${project.name}/endpoint`" #extra>
       <a-button v-if="idChrome" @click="onCfgDlgOpen">
@@ -70,6 +85,13 @@
       </a-tooltip>
     </template>
   </EditableTable>
+  <FormDialog
+    title="上传文件（夹）"
+    :mapper="upload.mapper"
+    :emitter="upload.emitter"
+    :new-fun="() => ({ localPath: '', destPath: '', isFolder: false })"
+    @submit="onUpldFlsSubmit"
+  />
   <FormDialog
     title="基础配置"
     :lbl-wid="6"
@@ -117,12 +139,12 @@ import Table from '@/types/table'
 import useGlobalStore from '@/stores/global'
 import { copies } from '@/types/index'
 import Endpoint from '@/types/endpoint'
-import { newOne, reqGet } from '@lib/utils'
+import { newOne, reqGet, rmvEndsOf } from '@lib/utils'
 import SlotsTable from '@/components/slotsTable.vue'
 import lgnAPI from '@/apis/login'
 import { MoreOutlined, SyncOutlined, WarningOutlined } from '@ant-design/icons-vue'
 import FormDialog from '@lib/components/FormDialog.vue'
-import { UploadChangeParam } from 'ant-design-vue'
+import { Upload as AUpload, UploadChangeParam } from 'ant-design-vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -149,6 +171,27 @@ const cfgMapper = new Mapper({
 const formState = reactive(useGlobalStore())
 const chromePaths = reactive<string[]>([])
 const idChrome = computed(() => chrome.chromeExecPath || false)
+const upload = reactive({
+  mapper: new Mapper({
+    localPath: {
+      type: 'Text',
+      label: '待上传文件'
+    },
+    destPath: {
+      type: 'Input',
+      label: '投放位置'
+    },
+    isFolder: {
+      type: 'Checkbox',
+      label: '是否为文件夹',
+      disabled: true,
+      placeholder: ''
+    }
+  }),
+  isFolder: false,
+  epKey: -1,
+  emitter: new TinyEmitter()
+})
 
 onMounted(refresh)
 watch(() => route.params.mname, refresh)
@@ -219,5 +262,24 @@ function onCfgDlgOpen() {
 }
 function onCfgSubmit(_form: any, done: () => void) {
   done()
+}
+function onUpldFlsChange(file: File, endpoint: Endpoint) {
+  upload.epKey = endpoint.key
+  const rootPath = rmvEndsOf(
+    file.path,
+    file.webkitRelativePath.substring(file.webkitRelativePath.indexOf('/') + 1)
+  )
+  upload.emitter.emit('update:visible', {
+    show: true,
+    object: { localPath: upload.isFolder ? rootPath : file.path, isFolder: upload.isFolder }
+  })
+  return false
+}
+async function onUpldFlsSubmit(form: any, callback: Function) {
+  const endpoint = await api.get('endpoint', upload.epKey, { copy: Endpoint.copy }) as Endpoint
+  await endpoint.decodeSlots()
+  await window.ipcRenderer.invoke('upload-file', JSON.stringify(endpoint), JSON.stringify(form))
+  callback()
+  upload.epKey = -1
 }
 </script>

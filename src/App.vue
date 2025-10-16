@@ -5,26 +5,19 @@
         v-if="route.path !== '/login_platform/login'"
         class="pl-0 pr-5 flex bg-white"
       >
-        <a-space
-          class="h-full p-1 bg-white"
-          align="center"
-          :style="{ width: collapsed ? '80px' : '200px' }"
-        >
-          <!-- <div
-          class="h-full bg-gray-300 rounded-sm hover:cursor-pointer hover:bg-gray-200"
-          @click="() => router.push('/')"
-        /> -->
-          <a-avatar class="w-[72px] h-[60px]" :src="logo" />
-          <a-typography-title v-if="!collapsed" class="mb-0" :level="4">
-            账号管理器
-          </a-typography-title>
-        </a-space>
-        <div class="flex flex-1 leading-16 justify-between">
-          <a-menu mode="horizontal" :style="{ lineHeight: '64px' }" @click="onHdMnuClick">
-            <a-menu-item key="reload">
-              <template #icon><ReloadOutlined /></template>刷新
-            </a-menu-item>
-          </a-menu>
+        <a href="#" @click="onHdMnuClick">
+          <a-space
+            class="h-full p-1 bg-white"
+            align="center"
+            :style="{ width: collapsed ? '80px' : '200px' }"
+          >
+            <a-avatar class="w-[72px] h-[60px]" :src="logo" />
+            <a-typography-title v-if="!collapsed" class="mb-0" :level="4">
+              账号管理器
+            </a-typography-title>
+          </a-space>
+        </a>
+        <div class="flex flex-1 leading-16 justify-end">
           <a-popover v-if="(project.auth as any).model" placement="bottomRight">
             <template #content>
               <a-button type="primary" danger ghost @click="onLogoutClick">退出</a-button>
@@ -94,15 +87,16 @@ import {
   UserOutlined,
   MenuUnfoldOutlined,
   MenuFoldOutlined,
-  FormOutlined,
-  ReloadOutlined
+  FormOutlined
 } from '@ant-design/icons-vue'
 import api from '@/apis/model'
 import { rmvStartsOf } from '@lib/utils'
 import * as antdIcons from '@ant-design/icons-vue/lib/icons'
 import Model from '@/types/model'
 import logo from '@/assets/Emblem.png'
+import useGlobalStore from './stores/global'
 
+const store = useGlobalStore()
 const route = useRoute()
 const router = useRouter()
 const sdNavMdls = ref<Model[]>([])
@@ -142,7 +136,7 @@ function onMuItmSelect(params: SelectInfo) {
   router.push(`/${project.name}/${(params.keyPath || []).join('/')}`)
 }
 function onLogoutClick() {
-  window.localStorage.removeItem('token')
+  store.token = ''
   router.replace({ path: `/${project.name}/login`, replace: true })
 }
 function getIconCompo(name: string): Component {

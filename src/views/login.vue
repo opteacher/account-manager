@@ -87,7 +87,9 @@ import { Cond } from '@lib/types'
 import { Rule } from 'ant-design-vue/es/form'
 import { ToolOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
+import useGlobalStore from '@/stores/global'
 
+const store = useGlobalStore()
 const router = useRouter()
 const lgnProps = reactive(MidLgn.copy(project.middle.login))
 const formState = reactive(
@@ -173,7 +175,7 @@ const flags = reactive({
 })
 
 onMounted(async () => {
-  if (localStorage.getItem('token')) {
+  if (store.token) {
     const result = await api.verifyDeep()
     if (!result.error) {
       router.replace(`/${project.name}/endpoint`)
@@ -191,7 +193,7 @@ async function onFinish(values: any) {
   } else {
     const result = await api.login(values)
     if (result.token) {
-      localStorage.setItem('token', result.token)
+      store.token = result.token
       router.push(`/${project.name}/endpoint`)
     }
   }
@@ -214,7 +216,7 @@ async function onLoginAftReg() {
   flags.succeed = false
 }
 function onFixBtnClick() {
-  localStorage.removeItem('token')
+  store.token = ''
   message.success('浏览器环境被修复！')
 }
 </script>

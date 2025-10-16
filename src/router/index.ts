@@ -5,6 +5,7 @@ import Model from '../views/model.vue'
 import login from '../views/login.vue'
 import project from '@/jsons/project.json'
 import Endpoint from '../views/endpoint.vue'
+import useGlobalStore from '@/stores/global'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -49,7 +50,7 @@ router.beforeEach(async (to, _from, next) => {
           'account',
           '/verify'
         ].join(''), undefined, {
-          headers: { authorization: 'Bearer ' + (localStorage.getItem('token') || '') }
+          headers: { authorization: 'Bearer ' + useGlobalStore().token }
         })
       )
       if (result.error) {
