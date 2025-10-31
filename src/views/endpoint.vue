@@ -95,7 +95,7 @@
       @submit="onAuthSshSubmit"
     />
     <div v-if="endpoint.ins.login === 'ssh'" class="flex-1 flex mt-5">
-      <SshPanel :curURL="endpoint.curURL" />
+      <SshPanel :url="endpoint.curURL" />
     </div>
     <div v-else-if="endpoint.ins.login === 'web'" class="flex-1 flex mt-5">
       <StepSideBar :endpoint="endpoint.ins" @click="onGo2NextPage">
@@ -103,7 +103,7 @@
           <SlotSideBar
             :slots="endpoint.page.slots"
             :collecting="endpoint.collecting"
-            v-model:selKeys="endpoint.selKeys"
+            :emitter="endpoint.emitter"
             @slotDel="refresh"
             @submit="onSlotsSave"
           />
@@ -112,11 +112,11 @@
       <PgEleSelect
         ref="pageRef"
         v-model:loading="endpoint.collecting"
-        :curURL="endpoint.curURL"
+        :url="endpoint.curURL"
         :emitter="endpoint.emitter"
-        :hlEles="endpoint.page.slots.map(slot => slot.xpath)"
+        :hlEles="endpoint.page.slots.map(slot => slot.element.xpath)"
         :sbarWid="300"
-        v-model:selKeys="endpoint.selKeys"
+        :addrBar="false"
       >
         <template #empty>
           <ol>
@@ -170,7 +170,7 @@ import { newOne, reqPut, setProp } from '@lib/utils'
 import Mapper, { createByFields } from '@lib/types/mapper'
 import mdlAPI from '@/apis/model'
 import { useRoute } from 'vue-router'
-import Page, { Slot } from '@/types/page'
+import Page from '@/types/page'
 import FormDialog from '@lib/components/FormDialog.vue'
 import { TinyEmitter } from 'tiny-emitter'
 import { Cond } from '@lib/types'
@@ -185,6 +185,7 @@ import lgnAPI from '@/apis/login'
 import StepSideBar from '@/components/stepSideBar.vue'
 import PgEleSelect from '@lib/components/PgEleSelect.vue'
 import { detectNetwork } from '@/apis'
+import PgOper from '@lib/types/pgOper'
 
 const placeholders = {
   web: '输入网址（必须带http或https前缀）',
@@ -197,6 +198,7 @@ const authMapper = new Mapper({
   atype: {
     type: 'Radio',
     style: 'button',
+    offset: 4,
     options: [
       { label: '一般认证', value: 'basic' },
       { label: 'id文件', value: 'idfile' }
@@ -206,17 +208,17 @@ const authMapper = new Mapper({
     label: '用户名',
     type: 'Input',
     rules: [{ required: true, message: '必须输入用户名！' }],
-    display: [Cond.create('atype', '=', 'basic')]
+    display: [Cond.create('atype', '==', 'basic')]
   },
   password: {
     label: '密码',
     type: 'Password',
-    display: [Cond.create('atype', '=', 'basic')]
+    display: [Cond.create('atype', '==', 'basic')]
   },
   idRsaFile: {
     label: 'idRsa公钥文件',
     type: 'UploadFile',
-    display: [Cond.create('atype', '=', 'idfile')]
+    display: [Cond.create('atype', '==', 'idfile')]
   }
 })
 const route = useRoute()
@@ -227,7 +229,6 @@ const endpoint = reactive<{
   page: Page
   collecting: boolean
   curURL: string
-  selKeys: string[]
   emitter: TinyEmitter
   nextPage: boolean
   pgIdx: number
@@ -238,7 +239,6 @@ const endpoint = reactive<{
   page: Page.copy({ url: 'http://124.28.221.82:8096' }),
   collecting: false,
   curURL: '',
-  selKeys: [],
   emitter: new TinyEmitter(),
   nextPage: false,
   pgIdx: 0
@@ -284,12 +284,12 @@ async function onPageCommit() {
     case 'ssh':
       {
         const [host, port] = endpoint.page.url.split(':')
-        const baseURL = (await detectNetwork()) as string
+        const baseURL = (await detectNetwork(false)) as string
         const sshHost = baseURL ? baseURL.substring(0, baseURL.lastIndexOf(':')) : ''
         const sshPort = import.meta.env.VITE_SSH_PORT
-        const unSlot = endpoint.page.slots.find(slot => slot.xpath === 'username')
+        const unSlot = endpoint.page.slots.find(slot => slot.element.xpath === 'username')
         const username = unSlot ? unSlot.value : 'root'
-        const pwdSlot = endpoint.page.slots.find(slot => slot.xpath === 'password')
+        const pwdSlot = endpoint.page.slots.find(slot => slot.element.xpath === 'password')
         const password = pwdSlot ? pwdSlot.value : undefined
         endpoint.curURL = [
           `${sshHost}:${sshPort}/?arg=-c&arg=`,
@@ -321,24 +321,24 @@ function onAuthSshSubmit(authSSH: AuthSSH, next: Function) {
   switch (authSSH.atype) {
     case 'basic':
       endpoint.page.slots.push(
-        Slot.copy({
-          xpath: 'username',
+        PgOper.copy({
+          element: { xpath: 'username' },
           value: authSSH.username,
-          valEnc: false
+          encrypt: false
         })
       )
       endpoint.page.slots.push(
-        Slot.copy({
-          xpath: 'password',
+        PgOper.copy({
+          element: { xpath: 'password' },
           value: authSSH.password,
-          valEnc: true
+          encrypt: true
         })
       )
       break
     case 'idfile':
       endpoint.page.slots.push(
-        Slot.copy({
-          xpath: 'idRsaFile',
+        PgOper.copy({
+          element: { xpath: 'idRsaFile' },
           value: authSSH.idRsaFile
         })
       )
@@ -351,7 +351,7 @@ function onAuthSshShow() {
     show: true,
     object: {
       atype: 'basic',
-      ...Object.fromEntries(endpoint.page.slots.map(slot => [slot.xpath, slot.value]))
+      ...Object.fromEntries(endpoint.page.slots.map(slot => [slot.element.xpath, slot.value]))
     }
   })
 }
@@ -383,14 +383,14 @@ async function onEpTitleSave() {
   await reqPut('endpoint', endpoint.ins.key, { name: endpoint.edtName })
   await refresh()
 }
-async function onSlotsSave(slots: Slot[]) {
+async function onSlotsSave(slots: PgOper[]) {
   endpoint.page.slots = slots
   const pgKey = endpoint.page.key === -1 ? 'n' : endpoint.page.key
   await mdlAPI.link('endpoint', endpoint.ins.key, 'page', pgKey, true, {
     type: 'api',
     axiosConfig: { data: endpoint.page }
   })
-  endpoint.selKeys = []
+  endpoint.emitter.emit('stop-select')
   await refresh()
 }
 </script>

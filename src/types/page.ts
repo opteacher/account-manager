@@ -1,45 +1,12 @@
 import useGlobalStore from '@/stores/global'
+import PgOper from '@lib/types/pgOper'
 import { gnlCpy, until } from '@lib/utils'
 import { WebviewTag } from 'electron'
-
-export const itypes = {
-  input: '输入',
-  select: '选择',
-  click: '点击'
-}
-
-export class Slot {
-  key: number
-  xpath: string
-  itype: keyof typeof itypes
-  value: string
-  valEnc: boolean
-
-  constructor() {
-    this.key = -1
-    this.xpath = ''
-    this.itype = 'input'
-    this.value = ''
-    this.valEnc = false
-  }
-
-  reset() {
-    this.key = -1
-    this.xpath = ''
-    this.itype = 'input'
-    this.value = ''
-    this.valEnc = false
-  }
-
-  static copy(src: any, tgt?: Slot, force = false) {
-    return gnlCpy(Slot, src, tgt, { force })
-  }
-}
 
 export default class Page {
   key: number
   url: string
-  slots: Slot[]
+  slots: PgOper[]
 
   constructor() {
     this.key = -1
@@ -57,15 +24,15 @@ export default class Page {
     return gnlCpy(Page, src, tgt, {
       force,
       cpyMapper: {
-        slots: Slot.copy
+        slots: PgOper.copy
       }
     })
   }
 
   async decodeSlots() {
     this.slots = await Promise.all(
-      this.slots.map(async (slot: any) => {
-        if (slot.valEnc) {
+      this.slots.map(async slot => {
+        if (slot.encrypt) {
           slot.value = await window.ipcRenderer.invoke(
             'decode-value',
             useGlobalStore().token,
@@ -80,9 +47,9 @@ export default class Page {
 
   async execSlots(webview?: WebviewTag) {
     for (const slot of this.slots) {
-      const ele = `document.evaluate('${slot.xpath}', document).iterateNext()`
+      const ele = `document.evaluate('${slot.element.xpath}', document).iterateNext()`
       await new Promise(resolve => setTimeout(resolve, 1000))
-      switch (slot.itype) {
+      switch (slot.otype) {
         case 'input':
           await webview?.executeJavaScript(`${ele}.value = '${slot.value}'`)
           break

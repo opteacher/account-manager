@@ -5,9 +5,9 @@
     :pagination="false"
     :columns="[
       { title: '步骤', dataIndex: 'index' },
-      { title: 'xpath', dataIndex: 'xpath' },
-      { title: '操作类型', dataIndex: 'itype' },
-      { title: '加密值', dataIndex: 'valEnc' },
+      { title: 'xpath', dataIndex: 'element.xpath' },
+      { title: '操作类型', dataIndex: 'otype' },
+      { title: '加密值', dataIndex: 'encrypt' },
       { title: '值', dataIndex: 'value' }
     ]"
     :data-source="record.slots"
@@ -16,11 +16,14 @@
       <template v-if="column.dataIndex === 'index'">
         {{ index + 1 }}
       </template>
-      <template v-else-if="column.dataIndex === 'valEnc'">
+      <template v-if="column.dataIndex === 'element.xpath'">
+        {{ record.element.xpath }}
+      </template>
+      <template v-else-if="column.dataIndex === 'encrypt'">
         {{ text ? '加密' : '不加密' }}
       </template>
       <template v-else-if="column.dataIndex === 'value'">
-        {{ record.valEnc ? '●●●●●●●●' : text }}
+        {{ record.encrypt ? '●●●●●●●●' : text }}
       </template>
     </template>
   </a-table>

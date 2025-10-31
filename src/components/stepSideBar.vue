@@ -2,8 +2,8 @@
 import Endpoint from '@/types/endpoint'
 import { computed, PropType, reactive, ref } from 'vue'
 import { Steps as ASteps, Step as AStep } from 'ant-design-vue'
-import Page, { itypes } from '@/types/page'
-import { DownloadOutlined, EditOutlined, SelectOutlined } from '@ant-design/icons-vue'
+import Page from '@/types/page'
+import { otypes } from '@lib/types/pgOper'
 import { TinyEmitter } from 'tiny-emitter'
 import { swchBoolProp } from '@lib/utils'
 import FlexDivider from '@lib/components/FlexDivider.vue'
@@ -17,11 +17,6 @@ const items = computed<Page[]>(() =>
   props.endpoint.pages.concat([Page.copy({ url: '执行到下一步' })])
 )
 const current = ref(0)
-const iconDict = {
-  input: EditOutlined,
-  click: DownloadOutlined,
-  select: SelectOutlined
-}
 const divider = reactive({
   width: 300,
   isHide: false,
@@ -51,12 +46,12 @@ function onStepClick(stepIdx: number) {
               <li v-for="(slot, index) in page.slots" class="truncate space-x-2">
                 {{ index + 1 }}.
                 <a-tooltip>
-                  <template #title>{{ itypes[slot.itype] }}</template>
-                  <component :is="iconDict[slot.itype]" />
+                  <template #title>{{ otypes[slot.otype] }}</template>
+                  <component :is="otypes[slot.otype].icon" />
                 </a-tooltip>
                 <a-tooltip>
-                  <template #title>{{ slot.xpath }}</template>
-                  <a>{{ slot.xpath }}</a>
+                  <template #title>{{ slot.element.xpath }}</template>
+                  <a>{{ slot.element.xpath }}</a>
                 </a-tooltip>
               </li>
             </ul>

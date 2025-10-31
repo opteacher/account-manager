@@ -1,11 +1,11 @@
 <template>
   <a-collapse v-model:activeKey="actKey" :bordered="false">
-    <a-collapse-panel v-if="selKeys.length" key="1">
+    <a-collapse-panel v-if="slotForm.element.xpath" key="1">
       <template #header>
         <a-tooltip>
-          <template #title>{{ selKeys[0] }}</template>
+          <template #title>{{ slotForm.element.xpath }}</template>
           <p class="mb-0 w-64 whitespace-nowrap overflow-hidden text-ellipsis">
-            {{ selKeys[0] }}
+            {{ slotForm.element.xpath }}
           </p>
         </a-tooltip>
       </template>
@@ -19,10 +19,10 @@
         }"
         @update:fprop="values => Object.entries(values).map(([k, v]) => setProp(slotForm, k, v))"
       >
-        <template #valuePFX="{ formState }">
+        <template #valuePFX="{ formState }: any">
           <a-button @click="() => onValEncSwitch(formState)">
             <template #icon>
-              <LockOutlined v-if="formState.valEnc" />
+              <LockOutlined v-if="formState.encrypt" />
               <UnlockOutlined v-else />
             </template>
           </a-button>
@@ -30,7 +30,7 @@
       </FormGroup>
       <a-button class="w-full" type="primary" @click="onSlotSave">提交</a-button>
       <template #extra>
-        <CloseOutlined @click="() => emit('update:selKeys', [])" />
+        <CloseOutlined @click="() => emitter.emit('stop-select')" />
       </template>
     </a-collapse-panel>
     <a-collapse-panel v-else-if="slots.length" key="2">
@@ -46,17 +46,22 @@
             <a-list-item-meta>
               <template #title>
                 <a-tooltip>
-                  <template #title>{{ slot.xpath }}</template>
-                  <a class="truncate" @click="() => emit('update:selKeys', [slot.xpath])">
-                    {{ slot.xpath }}
+                  <template #title>{{ slot.element.xpath }}</template>
+                  <a class="truncate" @click="() => emitter.emit('iden-ele', slot.element.xpath)">
+                    {{ slot.element.xpath }}
                   </a>
                 </a-tooltip>
               </template>
             </a-list-item-meta>
-            <div v-if="slot.valEnc">●●●●</div>
+            <div v-if="slot.encrypt">●●●●</div>
             <div v-else>{{ slot.value }}</div>
             <template #actions>
-              <a-button size="small" type="text" danger @click="() => onSlotRemove(slot.xpath)">
+              <a-button
+                size="small"
+                type="text"
+                danger
+                @click="() => onSlotRemove(slot.element.xpath)"
+              >
                 <template #icon><MinusCircleOutlined /></template>
               </a-button>
             </template>
@@ -79,43 +84,32 @@ import {
 } from '@ant-design/icons-vue'
 import { Cond } from '@lib/types'
 import { Modal } from 'ant-design-vue'
-import { createVNode, PropType, reactive, ref, watch } from 'vue'
-import { Slot } from '@/types/page'
+import { createVNode, PropType, reactive, ref } from 'vue'
 import { setProp } from '@lib/utils'
+import { TinyEmitter } from 'tiny-emitter'
+import PageEle from '@lib/types/pageEle'
+import PgOper, { otypes } from '@lib/types/pgOper'
 
-const emit = defineEmits(['update:selKeys', 'slotDel', 'submit'])
+const emit = defineEmits(['slotDel', 'submit'])
 const props = defineProps({
   collecting: { type: Boolean, required: true },
-  slots: { type: Array as PropType<Slot[]>, required: true },
-  selKeys: { type: Array as PropType<(string | number)[]>, required: true }
+  slots: { type: Array as PropType<PgOper[]>, required: true },
+  emitter: { type: TinyEmitter, required: true }
 })
 const slotMapper = reactive(
   new Mapper({
-    itype: {
+    otype: {
       label: '填入方式',
       type: 'Select',
-      options: [
-        {
-          label: '输入',
-          value: 'input'
-        },
-        {
-          label: '选择',
-          value: 'select'
-        },
-        {
-          label: '点击',
-          value: 'click'
-        }
-      ]
+      options: Object.entries(otypes).map(([value, { label }]) => ({ value, label }))
     },
     value: {
       label: '填入值',
       type: 'Input',
       visible: false,
-      display: [new Cond({ key: 'itype', cmp: '!=', val: 'click' })]
+      display: [new Cond({ key: 'otype', cmp: '!=', val: 'click' })]
     },
-    valEnc: {
+    encrypt: {
       label: '加密值',
       type: 'Checkbox',
       display: false
@@ -123,33 +117,24 @@ const slotMapper = reactive(
   })
 )
 const actKey = ref<string[]>([])
-const slotForm = reactive<Slot>(new Slot())
+const slotForm = reactive<PgOper>(new PgOper())
 
-watch(
-  () => props.selKeys,
-  () => {
-    if (!props.selKeys.length) {
-      slotForm.reset()
-      return
-    }
-    Slot.copy(
-      props.slots.find(slot => slot.xpath === props.selKeys[0]),
-      slotForm,
-      true
-    )
-    slotForm.xpath = props.selKeys[0] as string
-    actKey.value = ['1']
-    setProp(slotMapper, 'value.type', slotForm.valEnc ? 'Password' : 'Input')
-  },
-  { deep: true }
-)
+props.emitter.on('ele-selected', (ele?: PageEle) => {
+  slotForm.reset()
+  if (!ele) {
+    return
+  }
+  PageEle.copy(ele, slotForm.element, true)
+  actKey.value = ['1']
+  setProp(slotMapper, 'value.type', slotForm.encrypt ? 'Password' : 'Input')
+})
 
 function onSlotSave() {
-  const idSlot = props.slots.find(slot => slot.xpath === props.selKeys[0])
+  const idSlot = props.slots.find(slot => slot.element.xpath === slotForm.element.xpath)
   if (idSlot) {
-    Slot.copy(slotForm, idSlot, true)
+    PgOper.copy(slotForm, idSlot, true)
   } else {
-    props.slots.push(Slot.copy(slotForm))
+    props.slots.push(PgOper.copy(slotForm))
   }
   slotForm.reset()
   emit('submit', props.slots)
@@ -162,17 +147,17 @@ function onSlotRemove(xpath: string) {
       emit(
         'slotDel',
         props.slots.splice(
-          props.slots.findIndex(slot => slot.xpath === xpath),
+          props.slots.findIndex(slot => slot.element.xpath === xpath),
           1
         )
       )
     }
   })
 }
-function onValEncSwitch(formState: any) {
-  setProp(formState, 'valEnc', !formState.valEnc)
-  setProp(formState, 'value', '')
-  setProp(slotMapper, 'value.type', formState.valEnc ? 'Password' : 'Input')
+function onValEncSwitch(formState: PgOper) {
+  formState.encrypt = !formState.encrypt
+  formState.value = ''
+  setProp(slotMapper, 'value.type', formState.encrypt ? 'Password' : 'Input')
 }
 </script>
 

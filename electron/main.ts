@@ -84,9 +84,9 @@ function createWindow() {
             }
 
             for (const slot of pgInfo.slots) {
-              const ele = await page.waitForXPath(slot.xpath)
+              const ele = await page.waitForXPath(slot.element.xpath)
               await page.waitForTimeout(1000)
-              switch (slot.itype) {
+              switch (slot.otype) {
                 case 'input':
                   await ele?.type(slot.value)
                   break
@@ -103,9 +103,9 @@ function createWindow() {
         {
           const pgInfo = epInfo.pages[0]
           const [host, port] = pgInfo.url.split(':')
-          const usrSlot = pgInfo.slots.find((slot: any) => slot.xpath === 'username')
+          const usrSlot = pgInfo.slots.find((slot: any) => slot.element.xpath === 'username')
           const username = usrSlot ? usrSlot.value : 'root'
-          const pwdSlot = pgInfo.slots.find((slot: any) => slot.xpath === 'password')
+          const pwdSlot = pgInfo.slots.find((slot: any) => slot.element.xpath === 'password')
           const password = pwdSlot ? pwdSlot.value : undefined
           const sshCmd = [
             'sshpass',
@@ -138,11 +138,10 @@ function createWindow() {
   ipcMain.handle('upload-file', async (_e, sEpInfo, sFileInfo) => {
     const epInfo = JSON.parse(sEpInfo)
     const pgInfo = epInfo.pages[0]
-    console.log(pgInfo)
     const [host, port] = pgInfo.url.split(':')
-    const usrSlot = pgInfo.slots.find((slot: any) => slot.xpath === 'username')
+    const usrSlot = pgInfo.slots.find((slot: any) => slot.element.xpath === 'username')
     const username = usrSlot ? usrSlot.value : 'root'
-    const pwdSlot = pgInfo.slots.find((slot: any) => slot.xpath === 'password')
+    const pwdSlot = pgInfo.slots.find((slot: any) => slot.element.xpath === 'password')
     const password = pwdSlot ? pwdSlot.value : undefined
     const flInfo = JSON.parse(sFileInfo)
     const sshCmd = [

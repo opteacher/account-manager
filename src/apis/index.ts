@@ -17,8 +17,8 @@ axios.interceptors.request.use(
   }
 )
 
-export async function detectNetwork() {
-  if (!import.meta.env.PROD) {
+export async function detectNetwork(skipDev = true) {
+  if (!import.meta.env.PROD && skipDev) {
     return
   }
   for (const url of [

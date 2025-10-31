@@ -158,7 +158,7 @@ const lgnMapper = createByFields(
       ],
       refer: 'repeatPassword',
       placeholder: '',
-      display: [Cond.create('register', '=', true)],
+      display: [Cond.create('register', '==', true)],
       extra: {},
       key: '66163279ca32f3b75d88ea18'
     }
