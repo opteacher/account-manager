@@ -145,6 +145,7 @@ import lgnAPI from '@/apis/login'
 import { MoreOutlined, SyncOutlined, WarningOutlined } from '@ant-design/icons-vue'
 import FormDialog from '@lib/components/FormDialog.vue'
 import { Upload as AUpload, UploadChangeParam } from 'ant-design-vue'
+import eptAPI from '@/apis/endpoint'
 
 const route = useRoute()
 const router = useRouter()
@@ -178,8 +179,11 @@ const upload = reactive({
       label: '待上传文件'
     },
     destPath: {
-      type: 'Input',
-      label: '投放位置'
+      type: 'Cascader',
+      label: '投放位置',
+      onChange: (_form: any, to: string[]) => {
+        console.log(to)
+      }
     },
     isFolder: {
       type: 'Checkbox',
@@ -263,7 +267,7 @@ function onCfgDlgOpen() {
 function onCfgSubmit(_form: any, done: () => void) {
   done()
 }
-function onUpldFlsChange(file: File, endpoint: Endpoint) {
+async function onUpldFlsChange(file: File, endpoint: Endpoint) {
   upload.epKey = endpoint.key
   const rootPath = rmvEndsOf(
     file.path,
@@ -273,10 +277,14 @@ function onUpldFlsChange(file: File, endpoint: Endpoint) {
     show: true,
     object: { localPath: upload.isFolder ? rootPath : file.path, isFolder: upload.isFolder }
   })
+  const paths = (await eptAPI(endpoint.key).sshCmd.exec('find / -type d -maxdepth 1')) as string[]
+  upload.emitter.emit('update:mprop', {
+    'destPath.options': paths.map(p => ({ value: p, label: p }))
+  })
   return false
 }
 async function onUpldFlsSubmit(form: any, callback: Function) {
-  const endpoint = await api.get('endpoint', upload.epKey, { copy: Endpoint.copy }) as Endpoint
+  const endpoint = (await api.get('endpoint', upload.epKey, { copy: Endpoint.copy })) as Endpoint
   await endpoint.decodeSlots()
   await window.ipcRenderer.invoke('upload-file', JSON.stringify(endpoint), JSON.stringify(form))
   callback()

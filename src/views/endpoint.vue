@@ -298,6 +298,9 @@ async function onPageCommit() {
           '-o%20StrictHostKeyChecking=no',
           `${username}@${host}`
         ].join('%20')
+        if (endpoint.page.key === -1) {
+          await onSlotsSave()
+        }
         endpoint.collecting = false
       }
       break
@@ -383,8 +386,10 @@ async function onEpTitleSave() {
   await reqPut('endpoint', endpoint.ins.key, { name: endpoint.edtName })
   await refresh()
 }
-async function onSlotsSave(slots: PgOper[]) {
-  endpoint.page.slots = slots
+async function onSlotsSave(slots?: PgOper[]) {
+  if (slots) {
+    endpoint.page.slots = slots
+  }
   const pgKey = endpoint.page.key === -1 ? 'n' : endpoint.page.key
   await mdlAPI.link('endpoint', endpoint.ins.key, 'page', pgKey, true, {
     type: 'api',
