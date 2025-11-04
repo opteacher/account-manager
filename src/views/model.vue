@@ -89,7 +89,7 @@
     title="上传文件（夹）"
     :mapper="upload.mapper"
     :emitter="upload.emitter"
-    :new-fun="() => ({ localPath: '', destPath: '', isFolder: false })"
+    :new-fun="() => ({ localPath: '', destPath: [], isFolder: false })"
     @submit="onUpldFlsSubmit"
   />
   <FormDialog
@@ -139,7 +139,7 @@ import Table from '@/types/table'
 import useGlobalStore from '@/stores/global'
 import { copies } from '@/types/index'
 import Endpoint from '@/types/endpoint'
-import { newOne, reqGet, rmvEndsOf } from '@lib/utils'
+import { getProp, newOne, reqGet, rmvEndsOf } from '@lib/utils'
 import SlotsTable from '@/components/slotsTable.vue'
 import lgnAPI from '@/apis/login'
 import { MoreOutlined, SyncOutlined, WarningOutlined } from '@ant-design/icons-vue'
@@ -181,8 +181,27 @@ const upload = reactive({
     destPath: {
       type: 'Cascader',
       label: '投放位置',
-      onChange: (_form: any, to: string[]) => {
-        console.log(to)
+      onChange: async (_form: { destPath: string[] }, to?: string[]) => {
+        upload.emitter.emit('update:mprop', { 'destPath.loading': true })
+        const destPath = to || []
+        const paths = (await eptAPI(upload.epKey).sshCmd.exec(
+          `find /${destPath.join('/')} -type d -maxdepth 1`
+        )) as string[]
+        let options = getProp(upload.mapper, 'destPath.options')
+        for (let i = 0; i < destPath.length; ++i) {
+          const option = options.find((itm: any) => itm.value === destPath[i])
+          if (!option) {
+            throw new Error('Cannot find option for ' + destPath[i])
+          }
+          if (i === destPath.length - 1) {
+            option.children = paths.map(p => ({ value: p, label: p }))
+          } else {
+            options = option.children as any[]
+          }
+        }
+        upload.emitter.emit('update:mprop', {
+          'destPath.loading': false
+        })
       }
     },
     isFolder: {
@@ -194,7 +213,8 @@ const upload = reactive({
   }),
   isFolder: false,
   epKey: -1,
-  emitter: new TinyEmitter()
+  emitter: new TinyEmitter(),
+  loading: false
 })
 
 onMounted(refresh)
@@ -277,9 +297,11 @@ async function onUpldFlsChange(file: File, endpoint: Endpoint) {
     show: true,
     object: { localPath: upload.isFolder ? rootPath : file.path, isFolder: upload.isFolder }
   })
+  upload.emitter.emit('update:mprop', { 'destPath.loading': true })
   const paths = (await eptAPI(endpoint.key).sshCmd.exec('find / -type d -maxdepth 1')) as string[]
   upload.emitter.emit('update:mprop', {
-    'destPath.options': paths.map(p => ({ value: p, label: p }))
+    'destPath.options': paths.map(p => ({ value: p, label: p })),
+    'destPath.loading': false
   })
   return false
 }

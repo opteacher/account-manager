@@ -6,6 +6,7 @@ import { spawn } from 'child_process'
 import crypto from 'node:crypto'
 import axios from 'axios'
 import * as ChromeLauncher from 'chrome-launcher'
+import { spawnSync } from 'node:child_process'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -150,24 +151,22 @@ function createWindow() {
       'scp -o StrictHostKeyChecking=no',
       `-P ${port || 22}`,
       flInfo.isFolder ? '-r' : '',
-      flInfo.localPath,
-      `${username}@${host}:${flInfo.destPath}`
+      process.platform === 'win32'
+        ? flInfo.localPath
+            .replaceAll('\\', '/')
+            .replace(/(\w)\:/, (_m: string, p: string) => `/mnt/${p.toLowerCase()}`)
+        : flInfo.localPath,
+      `${username}@${host}:/${flInfo.destPath.join('/')}`
     ]
       .filter(cmd => cmd)
       .join(' ')
     switch (process.platform) {
       case 'win32':
         // echo y | plink.exe -C -ssh -legacy-stdio-prompts -pw 12345 -P 2022 op@124.28.221.82
-        spawn('cmd', ['/K', 'wsl', sshCmd], {
-          detached: true,
-          shell: true
-        })
+        spawnSync('cmd', ['/K', 'wsl', sshCmd], { shell: true })
         break
       case 'linux':
-        spawn('deepin-terminal', ['-e', 'bash', '-c', `"${sshCmd}; exec bash"`], {
-          detached: true,
-          shell: true
-        })
+        spawnSync('deepin-terminal', ['-e', 'bash', '-c', `"${sshCmd}; exec bash"`], { shell: true })
         break
     }
   })
