@@ -104,7 +104,7 @@
             :slots="endpoint.page.slots"
             :collecting="endpoint.collecting"
             :emitter="endpoint.emitter"
-            @slotDel="refresh"
+            @slotDel="onSlotsSave"
             @submit="onSlotsSave"
           />
         </template>

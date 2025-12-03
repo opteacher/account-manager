@@ -2,7 +2,6 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import puppeteer from 'puppeteer-core'
-import { spawn } from 'child_process'
 import crypto from 'node:crypto'
 import axios from 'axios'
 import * as ChromeLauncher from 'chrome-launcher'
@@ -100,7 +99,7 @@ function createWindow() {
 
             for (const slot of pgInfo.slots) {
               const ele = await page.waitForXPath(slot.element.xpath)
-              await page.waitForTimeout(1000)
+              await page.waitForTimeout(typeof slot.timeout !== 'undefined' ? slot.timeout : 200)
               switch (slot.otype) {
                 case 'input':
                   await ele?.type(slot.value)

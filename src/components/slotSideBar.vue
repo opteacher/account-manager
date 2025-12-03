@@ -107,12 +107,17 @@ const slotMapper = reactive(
       label: '填入值',
       type: 'Input',
       visible: false,
-      display: [new Cond({ key: 'otype', cmp: '!=', val: 'click' })]
+      display: [Cond.create('otype', '!=', 'click')]
     },
     encrypt: {
       label: '加密值',
       type: 'Checkbox',
       display: false
+    },
+    timeout: {
+      label: '延时',
+      type: 'Number',
+      suffix: '毫秒'
     }
   })
 )
@@ -144,13 +149,11 @@ function onSlotRemove(xpath: string) {
     title: '确定删除该槽？',
     icon: createVNode(ExclamationCircleOutlined),
     onOk() {
-      emit(
-        'slotDel',
-        props.slots.splice(
-          props.slots.findIndex(slot => slot.element.xpath === xpath),
-          1
-        )
+      props.slots.splice(
+        props.slots.findIndex(slot => slot.element.xpath === xpath),
+        1
       )
+      emit('slotDel', props.slots)
     }
   })
 }

@@ -48,7 +48,7 @@ export default class Page {
   async execSlots(webview?: WebviewTag) {
     for (const slot of this.slots) {
       const ele = `document.evaluate('${slot.element.xpath}', document).iterateNext()`
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      await new Promise(resolve => setTimeout(resolve, typeof slot.timeout !== 'undefined' ? slot.timeout : 200))
       switch (slot.otype) {
         case 'input':
           await webview?.executeJavaScript(`${ele}.value = '${slot.value}'`)
