@@ -89,7 +89,7 @@
     title="上传文件（夹）"
     :mapper="upload.mapper"
     :emitter="upload.emitter"
-    :new-fun="() => ({ localPath: '', destPath: [], isFolder: false })"
+    :new-fun="() => ({ localPath: '', destPath: [], isFolder: false, coverExists: true })"
     @submit="onUpldFlsSubmit"
   />
   <FormDialog
@@ -205,10 +205,13 @@ const upload = reactive({
       }
     },
     isFolder: {
-      type: 'Checkbox',
+      type: 'Switch',
       label: '是否为文件夹',
-      disabled: true,
-      placeholder: ''
+      disabled: true
+    },
+    coverExists: {
+      type: 'Switch',
+      label: '覆盖已存在文件'
     }
   }),
   isFolder: false,
@@ -289,13 +292,18 @@ function onCfgSubmit(_form: any, done: () => void) {
 }
 async function onUpldFlsChange(file: File, endpoint: Endpoint) {
   upload.epKey = endpoint.key
-  const rootPath = rmvEndsOf(
-    file.path,
-    file.webkitRelativePath.substring(file.webkitRelativePath.indexOf('/') + 1)
-  )
+  let suffix = file.webkitRelativePath.substring(file.webkitRelativePath.indexOf('/') + 1)
+  if (navigator.platform.startsWith('Win')) {
+    suffix = suffix.split('/').join('\\')
+  }
+  const rootPath = rmvEndsOf(file.path, suffix)
   upload.emitter.emit('update:visible', {
     show: true,
-    object: { localPath: upload.isFolder ? rootPath : file.path, isFolder: upload.isFolder }
+    object: {
+      localPath: upload.isFolder ? rootPath : file.path,
+      isFolder: upload.isFolder,
+      coverExists: true
+    }
   })
   upload.emitter.emit('update:mprop', { 'destPath.loading': true })
   const paths = (await eptAPI(endpoint.key).sshCmd.exec('find / -type d -maxdepth 1')) as string[]

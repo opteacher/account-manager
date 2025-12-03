@@ -32,6 +32,20 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
 
 let win: BrowserWindow | null
 
+function execCmd(cmd: string) {
+  switch (process.platform) {
+    case 'win32':
+      // echo y | plink.exe -C -ssh -legacy-stdio-prompts -pw 12345 -P 2022 op@124.28.221.82
+      spawnSync('cmd', ['/K', 'wsl', cmd], { shell: true })
+      break
+    case 'linux':
+      spawnSync('deepin-terminal', ['-e', 'bash', '-c', `"${cmd}; exec bash"`], {
+        shell: true
+      })
+      break
+  }
+}
+
 function createWindow() {
   win = new BrowserWindow({
     icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
@@ -108,30 +122,17 @@ function createWindow() {
           const username = usrSlot ? usrSlot.value : 'root'
           const pwdSlot = pgInfo.slots.find((slot: any) => slot.element.xpath === 'password')
           const password = pwdSlot ? pwdSlot.value : undefined
-          const sshCmd = [
-            'sshpass',
-            password ? `-p ${password}` : '',
-            'ssh -o StrictHostKeyChecking=no',
-            `-p ${port || 22}`,
-            `${username}@${host}`
-          ]
-            .filter(cmd => cmd)
-            .join(' ')
-          switch (process.platform) {
-            case 'win32':
-              // echo y | plink.exe -C -ssh -legacy-stdio-prompts -pw 12345 -P 2022 op@124.28.221.82
-              spawn('cmd', ['/K', 'wsl', sshCmd], {
-                detached: true,
-                shell: true
-              })
-              break
-            case 'linux':
-              spawn('deepin-terminal', ['-e', 'bash', '-c', `"${sshCmd}; exec bash"`], {
-                detached: true,
-                shell: true
-              })
-              break
-          }
+          execCmd(
+            [
+              'sshpass',
+              password ? `-p ${password}` : '',
+              'ssh -o StrictHostKeyChecking=no',
+              `-p ${port || 22}`,
+              `${username}@${host}`
+            ]
+              .filter(cmd => cmd)
+              .join(' ')
+          )
         }
         break
     }
@@ -145,30 +146,36 @@ function createWindow() {
     const pwdSlot = pgInfo.slots.find((slot: any) => slot.element.xpath === 'password')
     const password = pwdSlot ? pwdSlot.value : undefined
     const flInfo = JSON.parse(sFileInfo)
-    const sshCmd = [
-      'sshpass',
-      password ? `-p ${password}` : '',
-      'scp -o StrictHostKeyChecking=no',
-      `-P ${port || 22}`,
-      flInfo.isFolder ? '-r' : '',
-      process.platform === 'win32'
-        ? flInfo.localPath
-            .replaceAll('\\', '/')
-            .replace(/(\w)\:/, (_m: string, p: string) => `/mnt/${p.toLowerCase()}`)
-        : flInfo.localPath,
-      `${username}@${host}:/${flInfo.destPath.join('/')}`
-    ]
-      .filter(cmd => cmd)
-      .join(' ')
-    switch (process.platform) {
-      case 'win32':
-        // echo y | plink.exe -C -ssh -legacy-stdio-prompts -pw 12345 -P 2022 op@124.28.221.82
-        spawnSync('cmd', ['/K', 'wsl', sshCmd], { shell: true })
-        break
-      case 'linux':
-        spawnSync('deepin-terminal', ['-e', 'bash', '-c', `"${sshCmd}; exec bash"`], { shell: true })
-        break
+    if (flInfo.coverExists) {
+      execCmd(
+        [
+          'sshpass',
+          password ? `-p ${password}` : '',
+          `ssh ${username}@${host}`,
+          `"rm ${flInfo.isFolder ? '-r' : ''}`,
+          `/${flInfo.destPath.join('/')}"`
+        ]
+          .filter(cmd => cmd)
+          .join(' ')
+      )
     }
+    execCmd(
+      [
+        'sshpass',
+        password ? `-p ${password}` : '',
+        'scp -o StrictHostKeyChecking=no',
+        `-P ${port || 22}`,
+        flInfo.isFolder ? '-r' : '',
+        process.platform === 'win32'
+          ? flInfo.localPath
+              .replaceAll('\\', '/')
+              .replace(/(\w)\:/, (_m: string, p: string) => `/mnt/${p.toLowerCase()}`)
+          : flInfo.localPath,
+        `${username}@${host}:/${flInfo.destPath.join('/')}`
+      ]
+        .filter(cmd => cmd)
+        .join(' ')
+    )
   })
   ipcMain.handle('decode-value', async (_e, tkn, buf) => {
     for (const url of [
