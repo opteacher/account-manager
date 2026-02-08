@@ -45,7 +45,7 @@ function execCmd(cmd: string) {
   }
 }
 
-function createWindow() {
+async function createWindow() {
   win = new BrowserWindow({
     icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
     webPreferences: {
@@ -65,6 +65,15 @@ function createWindow() {
   } else {
     // win.loadFile('dist/index.html')
     win.loadFile(path.join(RENDERER_DIST, 'index.html'))
+  }
+
+  console.log('createWindow called, registering IPC handlers...')
+  try {
+    const { registerAllIPCHandlers } = await import('./backend/ipc')
+    registerAllIPCHandlers()
+    console.log('IPC handlers registered successfully')
+  } catch (error: any) {
+    console.error('Failed to register IPC handlers:', error.message)
   }
 
   ipcMain.handle('detect-chrome', () => {
@@ -177,29 +186,40 @@ function createWindow() {
     )
   })
   ipcMain.handle('decode-value', async (_e, tkn, buf) => {
-    for (const url of [
-      import.meta.env.VITE_HLW_URL,
-      import.meta.env.VITE_GAW_URL,
-      import.meta.env.VITE_GZW_URL
-    ]) {
-      try {
-        await axios.get(url, { timeout: 1000 })
-      } catch (e: any) {
-        if (e.status) {
-          axios.defaults.baseURL = e.config.url
-          break
+    try {
+      for (const url of [
+        import.meta.env.VITE_HLW_URL,
+        import.meta.env.VITE_GAW_URL,
+        import.meta.env.VITE_GZW_URL
+      ]) {
+        try {
+          await axios.get(url, { timeout: 1000 })
+        } catch (e: any) {
+          if (e.status) {
+            axios.defaults.baseURL = e.config.url
+            break
+          }
         }
       }
+
+      const resp = await axios.get(`/${import.meta.env.VITE_PJT}/api/v1/account/public-key`, {
+        headers: { Authorization: 'Bearer ' + tkn }
+      })
+
+      if (resp.status !== 200) {
+        throw new Error(resp.statusText + JSON.stringify(resp.data))
+      }
+
+      const resultBuf = Buffer.from(resp.data.result)
+      const bufParsed = JSON.parse(buf as string)
+      const bufBuffer = typeof bufParsed === 'string' ? Buffer.from(bufParsed) : bufParsed
+
+      return crypto
+        .publicDecrypt(resultBuf, bufBuffer)
+        .toString('utf8')
+    } catch (error: any) {
+      throw error
     }
-    const resp = await axios.get(`/${import.meta.env.VITE_PJT}/api/v1/account/public-key`, {
-      headers: { Authorization: 'Bearer ' + tkn }
-    })
-    if (resp.status !== 200) {
-      throw new Error(resp.statusText + JSON.stringify(resp.data))
-    }
-    return crypto
-      .publicDecrypt(Buffer.from(resp.data.result), Buffer.from(JSON.parse(buf)))
-      .toString('utf8')
   })
 }
 
@@ -215,12 +235,21 @@ app.on('window-all-closed', () => {
   }
 })
 
-app.on('activate', () => {
+app.on('activate', async () => {
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow()
+    await createWindow()
   }
 })
 
-app.whenReady().then(createWindow)
+app.whenReady().then(async () => {
+  try {
+    const { initializeBackend } = await import('./backend/database/init')
+    await initializeBackend()
+    console.log('Database initialized')
+  } catch (error: any) {
+    console.error('Failed to initialize database:', error.message)
+  }
+  createWindow()
+})

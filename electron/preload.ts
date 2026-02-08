@@ -15,8 +15,8 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
     return ipcRenderer.send(channel, ...omit)
   },
   invoke(...args: Parameters<typeof ipcRenderer.invoke>) {
-    const [channel, ...omit] = args
-    return ipcRenderer.invoke(channel, ...omit)
+    const [channel, ...rest] = args
+    return ipcRenderer.invoke(channel, ...rest)
   },
 
   // You can expose other APTs you need here.

@@ -1,55 +1,65 @@
 <template>
-  <div class="h-full flex flex-col">
-    <a-page-header>
+  <div class="endpoint-container">
+    <a-page-header class="page-header">
       <template #title>
-        <a-space>
-          <a-typography-title class="mb-0" :level="3">登录端 /</a-typography-title>
-          <a-form v-if="endpoint.edit" layout="inline" :model="endpoint">
+        <div class="header-title-section">
+          <a-typography-title class="page-title" :level="3">
+            {{ endpoint.edit ? '编辑登录端' : endpoint.ins.name }}
+          </a-typography-title>
+          <a-form v-if="endpoint.edit" layout="inline" :model="endpoint" class="title-form">
             <a-form-item
               name="edtName"
               :rules="[{ required: true, message: '必须输入登录端名！' }]"
+              class="inline-form-item"
             >
-              <a-input v-model:value="endpoint.edtName" allowClear :disabled="endpoint.collecting">
+              <a-input
+                v-model:value="endpoint.edtName"
+                allowClear
+                :disabled="endpoint.collecting"
+                class="title-input"
+                placeholder="输入登录端名称"
+              >
                 <template #suffix>
-                  <a-button size="small" type="link" @click="onEpTitleSave">
-                    <template #icon><CheckOutlined /></template>
-                  </a-button>
-                  <a-button
-                    size="small"
-                    type="link"
-                    danger
-                    @click="() => setProp(endpoint, 'edit', false)"
-                  >
-                    <template #icon><CloseOutlined /></template>
-                  </a-button>
+                  <a-space>
+                    <a-button size="small" type="link" class="action-btn" @click="onEpTitleSave">
+                      <template #icon><CheckOutlined /></template>
+                      保存
+                    </a-button>
+                    <a-button
+                      size="small"
+                      type="link"
+                      danger
+                      class="action-btn"
+                      @click="() => setProp(endpoint, 'edit', false)"
+                    >
+                      <template #icon><CloseOutlined /></template>
+                      取消
+                    </a-button>
+                  </a-space>
                 </template>
               </a-input>
             </a-form-item>
           </a-form>
-          <a-typography-title v-else class="mb-0" :level="3">
-            {{ endpoint.ins.name }}
-          </a-typography-title>
-        </a-space>
-        <a-button
-          v-if="!endpoint.edit"
-          type="link"
-          :disabled="endpoint.collecting"
-          @click="onEpTitleChange"
-        >
-          <template #icon><EditOutlined /></template>
-        </a-button>
+        </div>
       </template>
       <template #backIcon>
-        <ArrowLeftOutlined v-if="endpoint.pgIdx > 0" />
+        <a-button
+          v-if="endpoint.pgIdx > 0"
+          type="text"
+          class="back-btn"
+          @click="onGoBack"
+        >
+          <ArrowLeftOutlined />
+        </a-button>
       </template>
       <template #tags>
-        <a-tag color="blue">
+        <a-tag class="page-tag" color="blue">
           <template #icon><BorderlessTableOutlined /></template>
           页面{{ endpoint.pgIdx + 1 }}
         </a-tag>
       </template>
       <template #extra>
-        <a-input-group class="flex-1 flex" compact size="large">
+        <div class="header-actions">
           <a-select
             disabled
             :options="[
@@ -58,99 +68,97 @@
             ]"
             v-model:value="endpoint.ins.login"
             @change="onLgnTypeChange"
+            class="login-type-select"
           />
           <a-input
-            class="flex-1 min-w-[30vw]"
+            class="url-input"
             allowClear
             v-model:value="endpoint.page.url"
             :placeholder="placeholders[endpoint.ins.login]"
             @pressEnter="onPageCommit"
           >
-            <template #prefix><RightOutlined /></template>
+            <template #prefix><RightOutlined class="input-icon" /></template>
             <template #clearIcon>
-              <CloseCircleFilled @click="() => (endpoint.curURL = '')" />
+              <CloseCircleFilled class="clear-icon" @click="() => (endpoint.curURL = '')" />
             </template>
           </a-input>
           <a-button
             v-if="endpoint.ins.login === 'ssh'"
-            :type="endpoint.page.slots.length ? 'primary' : 'default'"
+            :type="endpoint.page.slots.length ? 'default' : 'primary'"
+            class="auth-btn"
             @click="onAuthSshShow"
           >
             <template #icon><KeyOutlined /></template>
             {{ endpoint.page.slots.length ? '已认证' : '认证' }}
           </a-button>
-          <a-button type="primary" @click="onPageCommit" :loading="endpoint.collecting">
+          <a-button type="primary" class="submit-btn" @click="onPageCommit" :loading="endpoint.collecting">
             <template #icon><SendOutlined /></template>
             {{ endpoint.ins.login === 'ssh' ? '登录' : '跳转' }}
           </a-button>
-        </a-input-group>
+        </div>
       </template>
     </a-page-header>
+
     <FormDialog
       title="SSH认证"
-      width="30vw"
+      width="600px"
       :mapper="authMapper"
       :emitter="authSSh.emitter"
       :newFun="() => newOne(AuthSSH)"
       @submit="onAuthSshSubmit"
     />
-    <div v-if="endpoint.ins.login === 'ssh'" class="flex-1 flex mt-5">
-      <SshPanel :url="endpoint.curURL" />
+
+    <div class="content-wrapper">
+      <div v-if="endpoint.ins.login === 'ssh'" class="ssh-content">
+        <SshPanel :url="endpoint.curURL" />
+      </div>
+      <div v-else-if="endpoint.ins.login === 'web'" class="web-content">
+        <StepSideBar :endpoint="endpoint.ins" @click="onGo2NextPage">
+          <template #bottom>
+            <SlotSideBar
+              :slots="endpoint.page.slots"
+              :collecting="endpoint.collecting"
+              :emitter="endpoint.emitter"
+              @slotDel="onSlotsSave"
+              @submit="onSlotsSave"
+            />
+          </template>
+        </StepSideBar>
+        <PgEleSelect
+          ref="pageRef"
+          v-model:loading="endpoint.collecting"
+          :url="endpoint.curURL"
+          :emitter="endpoint.emitter"
+          :hlEles="endpoint.page.slots.map(slot => slot.element.xpath)"
+          :sbarWid="300"
+          :addrBar="false"
+        >
+          <template #empty>
+            <div class="empty-guide">
+              <a-typography-title :level="5" class="guide-title">
+                操作指引
+              </a-typography-title>
+              <ol class="guide-list">
+                <li>登录类型选择【网页登录】</li>
+                <li>在【地址栏】输入网址</li>
+                <li>点击【跳转】加载网页并收集网页元素</li>
+                <li>给登录表单的元素绑定账户信息</li>
+                <li>点击【保存】绑定网页元素与账户信息</li>
+              </ol>
+            </div>
+          </template>
+        </PgEleSelect>
+      </div>
     </div>
-    <div v-else-if="endpoint.ins.login === 'web'" class="flex-1 flex mt-5">
-      <StepSideBar :endpoint="endpoint.ins" @click="onGo2NextPage">
-        <template #bottom>
-          <SlotSideBar
-            :slots="endpoint.page.slots"
-            :collecting="endpoint.collecting"
-            :emitter="endpoint.emitter"
-            @slotDel="onSlotsSave"
-            @submit="onSlotsSave"
-          />
-        </template>
-      </StepSideBar>
-      <PgEleSelect
-        ref="pageRef"
-        v-model:loading="endpoint.collecting"
-        :url="endpoint.curURL"
-        :emitter="endpoint.emitter"
-        :hlEles="endpoint.page.slots.map(slot => slot.element.xpath)"
-        :sbarWid="300"
-        :addrBar="false"
-      >
-        <template #empty>
-          <ol>
-            <li>
-              <a-typography-text type="secondary">登录类型选择【网页登录】</a-typography-text>
-            </li>
-            <li>
-              <a-typography-text type="secondary">在【地址栏】输入网址</a-typography-text>
-            </li>
-            <li>
-              <a-typography-text type="secondary">
-                点击【跳转】加载网页并收集网页元素
-              </a-typography-text>
-            </li>
-            <li>
-              <a-typography-text type="secondary">给登录表单的元素绑定账户信息</a-typography-text>
-            </li>
-            <li>
-              <a-typography-text type="secondary">
-                点击【保存】绑定网页元素与账户信息
-              </a-typography-text>
-            </li>
-          </ol>
-        </template>
-      </PgEleSelect>
-    </div>
+
+    <FormDialog
+      title="新增登录端"
+      :mapper="epMapper"
+      :emitter="endpoint.emitter"
+      :newFun="() => newOne(Endpoint)"
+      @submit="onEndpointSave"
+    />
   </div>
-  <FormDialog
-    title="新增登录端"
-    :mapper="epMapper"
-    :emitter="endpoint.emitter"
-    :newFun="() => newOne(Endpoint)"
-    @submit="onEndpointSave"
-  />
 </template>
 
 <script setup lang="ts">
@@ -169,7 +177,7 @@ import { onMounted, reactive, ref, watch } from 'vue'
 import { newOne, reqPut, setProp } from '@lib/utils'
 import Mapper, { createByFields } from '@lib/types/mapper'
 import mdlAPI from '@/apis/model'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import Page from '@/types/page'
 import FormDialog from '@lib/components/FormDialog.vue'
 import { TinyEmitter } from 'tiny-emitter'
@@ -187,13 +195,18 @@ import PgEleSelect from '@lib/components/PgEleSelect.vue'
 import { detectNetwork } from '@/apis'
 import PgOper from '@lib/types/pgOper'
 
+const router = useRouter()
+const route = useRoute()
+
 const placeholders = {
   web: '输入网址（必须带http或https前缀）',
   ssh: '输入SSH地址（host:port）'
 }
+
 const epMapper = createByFields(
   models.find(mdl => mdl.name === 'endpoint')?.form.fields.map(fld => Field.copy(fld)) || []
 )
+
 const authMapper = new Mapper({
   atype: {
     type: 'Radio',
@@ -221,7 +234,7 @@ const authMapper = new Mapper({
     display: [Cond.create('atype', '==', 'idfile')]
   }
 })
-const route = useRoute()
+
 const endpoint = reactive<{
   ins: Endpoint
   edit: boolean
@@ -243,9 +256,11 @@ const endpoint = reactive<{
   nextPage: false,
   pgIdx: 0
 })
+
 const pageRef = ref<{ webviewRef: WebviewTag | null }>({
   webviewRef: null
 })
+
 const authSSh = reactive({
   emitter: new TinyEmitter()
 })
@@ -267,6 +282,7 @@ async function refresh() {
   }
   endpoint.edit = false
 }
+
 async function onPageCommit() {
   endpoint.collecting = true
   switch (endpoint.ins.login) {
@@ -306,6 +322,7 @@ async function onPageCommit() {
       break
   }
 }
+
 async function onEndpointSave(_form: any, next: Function) {
   const newEp = await mdlAPI.add('endpoint', endpoint.ins, { copy: Endpoint.copy })
   const { payload } = await lgnAPI.verify()
@@ -314,11 +331,13 @@ async function onEndpointSave(_form: any, next: Function) {
   next()
   await refresh()
 }
+
 function onLgnTypeChange(lgnType: 'ssh' | 'web') {
   endpoint.page.reset()
   endpoint.ins.login = lgnType
   endpoint.curURL = ''
 }
+
 function onAuthSshSubmit(authSSH: AuthSSH, next: Function) {
   endpoint.page.slots = []
   switch (authSSH.atype) {
@@ -349,6 +368,7 @@ function onAuthSshSubmit(authSSH: AuthSSH, next: Function) {
   }
   next()
 }
+
 function onAuthSshShow() {
   authSSh.emitter.emit('update:visible', {
     show: true,
@@ -358,6 +378,7 @@ function onAuthSshShow() {
     }
   })
 }
+
 async function onGo2NextPage(pgIdx?: number) {
   if (!pageRef.value.webviewRef) {
     return
@@ -378,14 +399,17 @@ async function onGo2NextPage(pgIdx?: number) {
   }
   await onPageCommit()
 }
+
 function onEpTitleChange() {
   endpoint.edit = true
   endpoint.edtName = endpoint.ins.name
 }
+
 async function onEpTitleSave() {
   await reqPut('endpoint', endpoint.ins.key, { name: endpoint.edtName })
   await refresh()
 }
+
 async function onSlotsSave(slots?: PgOper[]) {
   if (slots) {
     endpoint.page.slots = slots
@@ -398,15 +422,233 @@ async function onSlotsSave(slots?: PgOper[]) {
   endpoint.emitter.emit('stop-select')
   await refresh()
 }
+
+function onGoBack() {
+  router.back()
+}
 </script>
 
-<style>
-.ant-tree-title {
+<style scoped>
+.endpoint-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--gray-50);
+}
+
+.page-header {
+  background: white;
+  border-bottom: 1px solid var(--border);
+  padding: 16px 24px;
+  margin: 0;
+}
+
+.header-title-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.page-title {
+  margin: 0;
+  color: var(--text-primary);
+  font-weight: var(--font-semibold);
+  letter-spacing: -0.01em;
+}
+
+.title-form {
+  flex: 1;
+}
+
+.inline-form-item {
+  margin-bottom: 0;
+  width: 100%;
+}
+
+.title-input {
+  flex: 1;
+}
+
+:deep(.title-input .ant-input) {
+  border-radius: var(--radius-sm);
+  border-color: var(--border);
+  font-size: var(--text-sm);
+}
+
+.action-btn {
+  font-size: var(--text-xs);
+  padding: 4px 8px;
+  height: auto;
+}
+
+.back-btn {
+  color: var(--text-secondary);
+  padding: 8px;
+}
+
+.back-btn:hover {
+  color: var(--primary);
+  background: var(--primary-50);
+}
+
+.page-tag {
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  max-width: 800px;
+}
+
+.login-type-select {
+  width: 120px;
+}
+
+:deep(.login-type-select .ant-select-selector) {
+  border-radius: var(--radius-sm);
+  border-color: var(--border);
+}
+
+.url-input {
+  flex: 1;
+}
+
+:deep(.url-input .ant-input) {
+  border-radius: var(--radius-sm);
+  border-color: var(--border);
+  font-size: var(--text-sm);
+}
+
+:deep(.url-input .ant-input:focus) {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-50);
+}
+
+.input-icon {
+  color: var(--text-tertiary);
+}
+
+.clear-icon {
+  color: var(--text-tertiary);
+  cursor: pointer;
+}
+
+.clear-icon:hover {
+  color: var(--text-secondary);
+}
+
+.auth-btn {
+  height: 40px;
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-medium);
+  font-size: var(--text-sm);
+}
+
+.auth-btn:hover {
+  background: var(--gray-50);
+}
+
+.submit-btn {
+  height: 40px;
+  padding: 0 24px;
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-medium);
+  font-size: var(--text-sm);
+  box-shadow: 0 2px 4px rgba(26, 115, 232, 0.2);
+}
+
+.submit-btn:hover {
+  background: var(--primary-hover);
+  box-shadow: 0 4px 8px rgba(26, 115, 232, 0.3);
+}
+
+.content-wrapper {
+  flex: 1;
+  padding: 24px;
+  overflow: hidden;
+}
+
+.ssh-content,
+.web-content {
+  height: 100%;
+  display: flex;
+  gap: 16px;
+}
+
+.empty-guide {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  max-width: 400px;
+}
+
+.guide-title {
+  color: var(--text-primary);
+  font-weight: var(--font-semibold);
+  margin: 0 0 16px 0;
+}
+
+.guide-list {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+}
+
+.guide-list li {
+  margin-bottom: 8px;
+}
+
+:deep(.ant-tree-title) {
   word-break: keep-all !important;
   white-space: nowrap !important;
 }
 
-.ant-spin-container {
+:deep(.ant-spin-container) {
   position: relative !important;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    padding: 12px 16px;
+  }
+
+  .header-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .login-type-select {
+    width: 100%;
+  }
+
+  .url-input {
+    width: 100%;
+  }
+
+  .auth-btn,
+  .submit-btn {
+    width: 100%;
+  }
+
+  .content-wrapper {
+    padding: 16px;
+  }
+
+  .ssh-content,
+  .web-content {
+    flex-direction: column;
+  }
+
+  .empty-guide {
+    max-width: 100%;
+  }
 }
 </style>

@@ -1,0 +1,60 @@
+-- 登录平台数据库初始化脚本
+-- 自动创建必要的表结构（如果 Sequelize 不存在）
+
+USE login_platform;
+
+-- 账户表（如果不存在）
+CREATE TABLE IF NOT EXISTS account (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(255) UNIQUE NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  role VARCHAR(50) DEFAULT 'user',
+  privateKey BLOB,
+  publicKey BLOB,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_username (username)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 端点表
+CREATE TABLE IF NOT EXISTS endpoint (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  icon VARCHAR(255),
+  login VARCHAR(50),
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 页面表
+CREATE TABLE IF NOT EXISTS page (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  url LONGTEXT,
+  slots JSON,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 记录表
+CREATE TABLE IF NOT EXISTS record (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  ip VARCHAR(255),
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_ip (ip)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 关联表
+CREATE TABLE IF NOT EXISTS endpoint_pages (
+  endpointId INT NOT NULL,
+  pageId INT NOT NULL,
+  FOREIGN KEY (endpointId) REFERENCES endpoint(id) ON DELETE CASCADE,
+  FOREIGN KEY (pageId) REFERENCES page(id) ON DELETE CASCADE,
+  PRIMARY KEY (endpointId, pageId)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 插入测试账户（密码: admin123）
+INSERT INTO account (username, password, role) 
+VALUES ('admin', SHA2('admin123', 'secret'), 'admin')
+ON DUPLICATE KEY UPDATE username=username;

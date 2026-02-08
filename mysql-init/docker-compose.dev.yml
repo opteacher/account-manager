@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: account-manager-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: account123
+      MYSQL_DATABASE: login_platform
+      MYSQL_USER: account_user
+      MYSQL_PASSWORD: account_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d
+    networks:
+      - account-manager
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  account-manager:
+    external: false
+
+volumes:
+  mysql-data:
+    driver: local
