@@ -61,6 +61,11 @@ export function registerEndpointHandlers() {
     return await endpointService.allByUser(session.userId, options)
   }))
 
+  ipcMain.handle('api:endpoint:create', wrapIPC(async (data: any, sessionId: string) => {
+    const session = await accountService.verify(sessionId)
+    return await endpointService.create(data, session.userId)
+  }))
+
   ipcMain.handle('api:endpoint:delete', wrapIPC(async (endpointId: number) => {
     return await endpointService.remove(endpointId)
   }))

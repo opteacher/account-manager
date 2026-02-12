@@ -3,6 +3,31 @@ import { getEndpointModel, getAccountModel, getPageModel } from '../models'
 import { execSync } from 'child_process'
 import * as path from 'path'
 
+export async function create(data: any, userId: number) {
+  const db = getDatabase()
+  const Endpoint = getEndpointModel()
+  const Account = getAccountModel()
+
+  const account = await db.select(Account, { _index: userId })
+  if (!account) {
+    throw new Error('Account not found')
+  }
+
+  const endpoint = await db.save(Endpoint, {
+    name: data.name,
+    icon: data.icon || '',
+    login: data.login || 'web',
+    fkPages: data.fkPages || []
+  })
+
+  const fkEndpoints = account.fkEndpoints || []
+  fkEndpoints.push(endpoint.id)
+
+  await db.save(Account, { fkEndpoints }, { _index: userId })
+
+  return endpoint
+}
+
 export async function allByUser(userId: number, options?: any) {
   const db = getDatabase()
   const Account = getAccountModel()
