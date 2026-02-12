@@ -189,8 +189,7 @@ function getIconCompo(name: string): Component {
   align-items: center;
   height: 100%;
   padding: 0 24px;
-  max-width: 1920px;
-  margin: 0 auto;
+  width: 100%;
 }
 
 .logo-section {
