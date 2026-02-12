@@ -4,6 +4,7 @@ import * as inflection from 'inflection'
 
 import type { DatabaseConfig } from '../config'
 import type { IDatabase } from './database'
+import { PropTypes, MiddleNames } from './database'
 
 const { singularize, pluralize } = inflection
 
@@ -75,34 +76,11 @@ export interface ForeignKeyCollection {
   [key: string]: ForeignKey
 }
 
-export const MiddleNames = {
-  select: '',
-  create: 'create',
-  update: 'update',
-  save: 'save',
-  delete: 'destroy',
-  valid: 'validation',
-  before: 'before',
-  after: 'after'
-}
-
 export class MySQL implements IDatabase {
   private sequelize: Sequelize | null = null
   public models: Map<string, any> = new Map()
 
-  public PropTypes = {
-    Id: DataTypes.UUID,
-    String: DataTypes.STRING,
-    LongStr: DataTypes.TEXT('long'),
-    Number: DataTypes.INTEGER,
-    DateTime: DataTypes.DATE,
-    Boolean: DataTypes.BOOLEAN,
-    Decimal: DataTypes.DECIMAL(64, 20),
-    Array: DataTypes.ARRAY,
-    Object: DataTypes.JSON,
-    Any: DataTypes.BLOB
-  }
-
+  public PropTypes = PropTypes
   public Middles = MiddleNames
 
   constructor(private _config: DatabaseConfig) {}
@@ -197,9 +175,9 @@ export class MySQL implements IDatabase {
         continue
       }
 
-      const propType = prop?.type
+      const propType: symbol = prop?.type || prop
 
-      if (propType === this.PropTypes.Array) {
+      if (propType === PropTypes.Array) {
         adjStt[pname] = {
           type: DataTypes.STRING(4096),
           get(this: any) {
@@ -218,26 +196,7 @@ export class MySQL implements IDatabase {
             this.setDataValue(pname, value.map((v: any) => this.encodeValue(v)).join(','))
           }
         }
-      } else if (prop === this.PropTypes.Array) {
-        adjStt[pname] = {
-          type: DataTypes.STRING(4096),
-          get(this: any) {
-            const strAry = this.getDataValue(pname)
-            return strAry ? strAry.split(',').map((t: string) => {
-              switch (t[0]) {
-                case 'o': return JSON.parse(decodeURIComponent(t.substring(1)))
-                case 'n': return parseInt(t.substring(1))
-                case 'd': return parseFloat(t.substring(1))
-                case 'b': return t.substring(1).toLowerCase() === 'true'
-                case 's': default: return t.substring(1)
-              }
-            }) : []
-          },
-          set(this: any, value: any) {
-            this.setDataValue(pname, value.map((v: any) => this.encodeValue(v)).join(','))
-          }
-        }
-      } else if (propType === this.PropTypes.Object || prop === this.PropTypes.Object) {
+      } else if (propType === PropTypes.Object) {
         adjStt[pname] = {
           type: DataTypes.STRING(4096),
           get(this: any) {
@@ -260,7 +219,7 @@ export class MySQL implements IDatabase {
       if (typeof prop?.default !== 'undefined') {
         if (prop.default === Date.now) {
           adjStt[pname].defaultValue = new Date()
-        } else if (prop === this.PropTypes.Array || propType === this.PropTypes.Array) {
+        } else if (propType === PropTypes.Array) {
           adjStt[pname].defaultValue = prop.default.map((v: any) => this.encodeValue(v)).join(',')
         } else {
           adjStt[pname].defaultValue = prop.default

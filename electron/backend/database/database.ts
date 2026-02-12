@@ -91,6 +91,20 @@ export interface IDatabase {
   max(mdlInf: any, column: string): Promise<number>
 }
 
+// Symbol-based property types for logical type distinction
+export const PropTypes = {
+  Id: Symbol('Id'),
+  String: Symbol('String'),
+  LongStr: Symbol('LongStr'),
+  Number: Symbol('Number'),
+  DateTime: Symbol('DateTime'),
+  Boolean: Symbol('Boolean'),
+  Decimal: Symbol('Decimal'),
+  Array: Symbol('Array'),
+  Object: Symbol('Object'),
+  Any: Symbol('Any')
+}
+
 export type DatabaseType = 'mysql' | 'sqlite'
 
 export const MiddleNames = {

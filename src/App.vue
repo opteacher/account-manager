@@ -129,7 +129,7 @@ async function refresh(toPath?: string) {
   const mdls = models.data.filter((model: any) => model.disp)
   for (const mname of mdls.map(mdl => mdl.name)) {
     try {
-      await api.all(mname, { messages: { notShow: true }, axiosConfig: { params: { limit: 1 } } })
+      await api.all(mname, { messages: { notShow: true }, options: { limit: 1 } })
     } catch (e) {
       mdls.splice(
         mdls.findIndex((mdl: any) => mdl.name === mname),

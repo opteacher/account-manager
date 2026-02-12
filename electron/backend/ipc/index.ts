@@ -2,6 +2,8 @@ import { ipcMain } from 'electron'
 import * as accountService from '../services/account'
 import * as endpointService from '../services/endpoint'
 import * as pageService from '../services/page'
+import { getDatabase } from '../database/init'
+import { getEndpointModel, getPageModel, getAccountModel, getRecordModel } from '../models'
 
 export interface IPCResponse<T = any> {
   success: boolean
@@ -44,6 +46,8 @@ export function registerAccountHandlers() {
     return { userId: session.userId, username: session.username }
   }))
 
+  ipcMain.handle('api:account:verify-deep', wrapIPC(accountService.verifyDeep))
+
   console.log('Account handlers registered')
 }
 
@@ -52,9 +56,9 @@ export function registerEndpointHandlers() {
     return await endpointService.getOne(endpointId)
   }))
 
-  ipcMain.handle('api:endpoint:list', wrapIPC(async (sessionId: string) => {
+  ipcMain.handle('api:endpoint:list', wrapIPC(async (sessionId: string, options?: any) => {
     const session = await accountService.verify(sessionId)
-    return await endpointService.allByUser(session.userId)
+    return await endpointService.allByUser(session.userId, options)
   }))
 
   ipcMain.handle('api:endpoint:delete', wrapIPC(async (endpointId: number) => {
@@ -73,9 +77,41 @@ export function registerPageHandlers() {
   }))
 }
 
+export function registerModelHandlers() {
+  ipcMain.handle('api:model:list', wrapIPC(async (sessionId: string, modelName: string, options?: any) => {
+    await accountService.verify(sessionId)
+    const db = getDatabase()
+    
+    let modelInfo
+    switch (modelName) {
+      case 'endpoint':
+        modelInfo = getEndpointModel()
+        break
+      case 'page':
+        modelInfo = getPageModel()
+        break
+      case 'account':
+        modelInfo = getAccountModel()
+        break
+      case 'record':
+        modelInfo = getRecordModel()
+        break
+      default:
+        throw new Error(`Unknown model: ${modelName}`)
+    }
+    
+    const condition: any = {}
+    if (options?.limit) {
+      condition.limit = options.limit
+    }
+    return await db.select(modelInfo, condition)
+  }))
+}
+
 export function registerAllIPCHandlers() {
   registerAccountHandlers()
   registerEndpointHandlers()
   registerPageHandlers()
+  registerModelHandlers()
   console.log('All IPC handlers registered')
 }

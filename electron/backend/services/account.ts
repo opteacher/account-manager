@@ -10,8 +10,6 @@ export async function sign(username: string, password: string) {
   const Account = getAccountModel()
   const secret = getSecret()
   const hashedPassword = crypto.createHmac('sha256', secret).update(password).digest('hex')
-  const tests = await db.select(Account, { username })
-  console.log(tests)
 
   const accounts = await db.select(Account, { username, password: hashedPassword })
 
@@ -35,6 +33,21 @@ export async function verify(sessionId: string) {
     throw new Error('未登录或会话已过期')
   }
   return session
+}
+
+export async function verifyDeep(sessionId: string) {
+  const session = sessionManager.verify(sessionId)
+  if (!session) {
+    throw new Error('未登录或会话已过期')
+  }
+  const db = getDatabase()
+  const Account = getAccountModel()
+  const account = await db.select(Account, { _index: session.userId })
+  return {
+    userId: session.userId,
+    username: session.username,
+    role: account?.role || 'user'
+  }
 }
 
 export async function getPubKey(userId: number) {

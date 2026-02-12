@@ -6,6 +6,7 @@ import crypto from 'node:crypto'
 import axios from 'axios'
 import * as ChromeLauncher from 'chrome-launcher'
 import { spawnSync } from 'node:child_process'
+import { initializeBackend } from './backend/database'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -67,7 +68,15 @@ async function createWindow() {
     win.loadFile(path.join(RENDERER_DIST, 'index.html'))
   }
 
-  console.log('createWindow called, registering IPC handlers...')
+  console.log('createWindow called, initializing backend...')
+  try {
+    await initializeBackend()
+    console.log('Backend initialized successfully')
+  } catch (error: any) {
+    console.error('Failed to initialize backend:', error.message)
+  }
+
+  console.log('Registering IPC handlers...')
   try {
     const { registerAllIPCHandlers } = await import('./backend/ipc')
     registerAllIPCHandlers()
@@ -243,13 +252,4 @@ app.on('activate', async () => {
   }
 })
 
-app.whenReady().then(async () => {
-  try {
-    const { initializeBackend } = await import('./backend/database/init')
-    await initializeBackend()
-    console.log('Database initialized')
-  } catch (error: any) {
-    console.error('Failed to initialize database:', error.message)
-  }
-  createWindow()
-})
+app.whenReady().then(createWindow)

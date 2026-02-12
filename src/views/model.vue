@@ -50,7 +50,7 @@
                 all: () =>
                   api
                     .get('endpoint', endpoint.key, { copy: Endpoint.copy })
-                    .then((ep: Endpoint) => ep.pages),
+                    .then(ep => (ep as Endpoint).pages),
                 remove: (pg: Page) =>
                   api
                     .link(['endpoint', endpoint.key], ['fkPages', pg.key], false)

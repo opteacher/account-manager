@@ -3,7 +3,7 @@ import { getEndpointModel, getAccountModel, getPageModel } from '../models'
 import { execSync } from 'child_process'
 import * as path from 'path'
 
-export async function allByUser(userId: number) {
+export async function allByUser(userId: number, options?: any) {
   const db = getDatabase()
   const Account = getAccountModel()
   const account = await db.select(Account, { _index: userId })
@@ -11,7 +11,11 @@ export async function allByUser(userId: number) {
     throw new Error('Account not found')
   }
   const Endpoint = getEndpointModel()
-  const endpoints = await db.select(Endpoint, {})
+  const condition: any = {}
+  if (options?.limit) {
+    condition.limit = options.limit
+  }
+  const endpoints = await db.select(Endpoint, condition)
   return endpoints.filter((ep: any) => ep.fkEndpoints && ep.fkEndpoints.includes(userId))
 }
 

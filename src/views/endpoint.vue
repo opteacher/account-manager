@@ -169,7 +169,6 @@ import {
   KeyOutlined,
   BorderlessTableOutlined,
   ArrowLeftOutlined,
-  EditOutlined,
   CheckOutlined,
   CloseOutlined
 } from '@ant-design/icons-vue'
@@ -192,7 +191,7 @@ import { WebviewTag } from 'electron'
 import lgnAPI from '@/apis/login'
 import StepSideBar from '@/components/stepSideBar.vue'
 import PgEleSelect from '@lib/components/PgEleSelect.vue'
-import { detectNetwork } from '@/apis'
+
 import PgOper from '@lib/types/pgOper'
 
 const router = useRouter()
@@ -300,7 +299,7 @@ async function onPageCommit() {
     case 'ssh':
       {
         const [host, port] = endpoint.page.url.split(':')
-        const baseURL = (await detectNetwork(false)) as string
+        const baseURL = import.meta.env.VITE_SSH_URL || 'http://localhost:8051'
         const sshHost = baseURL ? baseURL.substring(0, baseURL.lastIndexOf(':')) : ''
         const sshPort = import.meta.env.VITE_SSH_PORT
         const unSlot = endpoint.page.slots.find(slot => slot.element.xpath === 'username')
@@ -324,9 +323,9 @@ async function onPageCommit() {
 }
 
 async function onEndpointSave(_form: any, next: Function) {
-  const newEp = await mdlAPI.add('endpoint', endpoint.ins, { copy: Endpoint.copy })
+  const newEp = await mdlAPI.add('endpoint', endpoint.ins) as Endpoint
   const { payload } = await lgnAPI.verify()
-  await mdlAPI.link('account', payload.sub, 'fkEndpoints', newEp.key)
+  await mdlAPI.link(['account', payload.sub], ['fkEndpoints', newEp.key])
   endpoint.page.reset()
   next()
   await refresh()
@@ -400,10 +399,7 @@ async function onGo2NextPage(pgIdx?: number) {
   await onPageCommit()
 }
 
-function onEpTitleChange() {
-  endpoint.edit = true
-  endpoint.edtName = endpoint.ins.name
-}
+// onEpTitleChange removed - functionality not used
 
 async function onEpTitleSave() {
   await reqPut('endpoint', endpoint.ins.key, { name: endpoint.edtName })
@@ -415,10 +411,7 @@ async function onSlotsSave(slots?: PgOper[]) {
     endpoint.page.slots = slots
   }
   const pgKey = endpoint.page.key === -1 ? 'n' : endpoint.page.key
-  await mdlAPI.link('endpoint', endpoint.ins.key, 'page', pgKey, true, {
-    type: 'api',
-    axiosConfig: { data: endpoint.page }
-  })
+  await mdlAPI.link(['endpoint', endpoint.ins.key], ['page', pgKey], true)
   endpoint.emitter.emit('stop-select')
   await refresh()
 }

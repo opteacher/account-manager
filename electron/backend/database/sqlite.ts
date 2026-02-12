@@ -3,24 +3,13 @@ const Database = require('better-sqlite3')
 import type { DatabaseConfig } from '../config'
 import type { IDatabase, ModelStruct, ModelOptions, ModelInfo, SelectOptions, SaveOptions, WhereCondition, ForeignKeyCollection } from './database'
 
-import { MiddleNames } from './database'
+import { MiddleNames, PropTypes } from './database'
 
 export class SQLite implements IDatabase {
   private db: any = null
   private models: Map<string, ModelInfo> = new Map()
 
-  public PropTypes = {
-    Id: 'INTEGER PRIMARY KEY AUTOINCREMENT',
-    String: 'TEXT',
-    LongStr: 'TEXT',
-    Number: 'INTEGER',
-    DateTime: 'TEXT',
-    Boolean: 'INTEGER',
-    Decimal: 'REAL',
-    Array: 'TEXT',
-    Object: 'TEXT',
-    Any: 'BLOB'
-  }
+  public PropTypes = PropTypes
 
   public Middles = MiddleNames
 
@@ -47,17 +36,20 @@ export class SQLite implements IDatabase {
     }
   }
 
-  private structTypeToSqlType(propType: string): string {
-    if (propType === this.PropTypes.Id) return 'INTEGER PRIMARY KEY AUTOINCREMENT'
-    if (propType === this.PropTypes.String) return 'TEXT'
-    if (propType === this.PropTypes.LongStr) return 'TEXT'
-    if (propType === this.PropTypes.Number) return 'INTEGER'
-    if (propType === this.PropTypes.DateTime) return 'TEXT'
-    if (propType === this.PropTypes.Boolean) return 'INTEGER'
-    if (propType === this.PropTypes.Decimal) return 'REAL'
-    if (propType === this.PropTypes.Array) return 'TEXT'
-    if (propType === this.PropTypes.Object) return 'TEXT'
-    if (propType === this.PropTypes.Any) return 'BLOB'
+  private structTypeToSqlType(propType: symbol): string {
+    const typeMap: Record<symbol, string> = {
+      [PropTypes.Id]: 'INTEGER PRIMARY KEY AUTOINCREMENT',
+      [PropTypes.String]: 'TEXT',
+      [PropTypes.LongStr]: 'TEXT',
+      [PropTypes.Number]: 'INTEGER',
+      [PropTypes.DateTime]: 'TEXT',
+      [PropTypes.Boolean]: 'INTEGER',
+      [PropTypes.Decimal]: 'REAL',
+      [PropTypes.Array]: 'TEXT',
+      [PropTypes.Object]: 'TEXT',
+      [PropTypes.Any]: 'BLOB'
+    }
+    return typeMap[propType] || 'TEXT'
     return 'TEXT'
   }
 
@@ -112,18 +104,16 @@ export class SQLite implements IDatabase {
         continue
       }
 
-      const propType = prop?.type || prop
+      const propType: symbol = prop?.type || prop
 
-      if (propType === this.PropTypes.Array) {
+      if (propType === PropTypes.Array) {
         columns.push(`${pname} TEXT`)
-      } else if (propType === this.PropTypes.Object || prop === this.PropTypes.Object) {
+      } else if (propType === PropTypes.Object) {
         columns.push(`${pname} TEXT`)
-      } else if (prop === this.PropTypes.Boolean) {
+      } else if (propType === PropTypes.Boolean) {
         columns.push(`${pname} INTEGER DEFAULT 0`)
-      } else if (propType === this.PropTypes.Id) {
+      } else if (propType === PropTypes.Id) {
         columns.push(`${pname} INTEGER PRIMARY KEY AUTOINCREMENT`)
-      } else if (typeof propType === 'string' && propType.startsWith('INTEGER PRIMARY KEY')) {
-        columns.push(`${pname} ${propType}`)
       } else {
         columns.push(`${pname} ${this.structTypeToSqlType(propType)}`)
       }
@@ -321,16 +311,17 @@ export class SQLite implements IDatabase {
 
     for (const [key, value] of Object.entries(row)) {
       const prop = struct[key]
+      const propType: symbol = prop?.type || prop
 
-      if (prop === this.PropTypes.Array || prop?.type === this.PropTypes.Array) {
+      if (propType === PropTypes.Array) {
         processed[key] = this.decodeArray(value)
-      } else if (prop === this.PropTypes.Object || prop?.type === this.PropTypes.Object) {
+      } else if (propType === PropTypes.Object) {
         processed[key] = this.decodeObject(value)
-      } else if (prop === this.PropTypes.Boolean || prop?.type === this.PropTypes.Boolean) {
+      } else if (propType === PropTypes.Boolean) {
         processed[key] = value === 1
-      } else if (prop === this.PropTypes.Number || prop?.type === this.PropTypes.Number) {
+      } else if (propType === PropTypes.Number) {
         processed[key] = typeof value === 'string' ? parseInt(value) : value
-      } else if (prop === this.PropTypes.Decimal || prop?.type === this.PropTypes.Decimal) {
+      } else if (propType === PropTypes.Decimal) {
         processed[key] = typeof value === 'string' ? parseFloat(value) : value
       } else {
         processed[key] = value
@@ -388,11 +379,13 @@ export class SQLite implements IDatabase {
       const value = processedValues[col]
       const prop = mdlInf.struct[col]
 
-      if (prop === this.PropTypes.Array || prop?.type === this.PropTypes.Array) {
+      const propType: symbol = prop?.type || prop
+
+      if (propType === PropTypes.Array) {
         params.push(this.encodeArray(value))
-      } else if (prop === this.PropTypes.Object || prop?.type === this.PropTypes.Object) {
+      } else if (propType === PropTypes.Object) {
         params.push(this.encodeObject(value))
-      } else if (prop === this.PropTypes.Boolean || prop?.type === this.PropTypes.Boolean) {
+      } else if (propType === PropTypes.Boolean) {
         params.push(value ? 1 : 0)
       } else {
         params.push(value)
@@ -428,6 +421,7 @@ export class SQLite implements IDatabase {
 
       const current = existing[0][key]
       const prop = mdlInf.struct[key]
+      const propType: symbol = prop?.type || prop
 
       let finalValue = value
 
@@ -458,11 +452,11 @@ export class SQLite implements IDatabase {
 
       updates.push(`${key} = ?`)
 
-      if (prop === this.PropTypes.Array || prop?.type === this.PropTypes.Array) {
+      if (propType === PropTypes.Array) {
         params.push(this.encodeArray(finalValue))
-      } else if (prop === this.PropTypes.Object || prop?.type === this.PropTypes.Object) {
+      } else if (propType === PropTypes.Object) {
         params.push(this.encodeObject(finalValue))
-      } else if (prop === this.PropTypes.Boolean || prop?.type === this.PropTypes.Boolean) {
+      } else if (propType === PropTypes.Boolean) {
         params.push(finalValue ? 1 : 0)
       } else {
         params.push(finalValue)

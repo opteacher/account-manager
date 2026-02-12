@@ -88,7 +88,7 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive } from 'vue'
 import MidLgn from '@/types/midLgn'
 import Field from '@lib/types/field'
 import { useRouter } from 'vue-router'
@@ -198,10 +198,7 @@ onMounted(async () => {
 
 async function onFinish(values: any) {
   if (formState.register) {
-    const result = await api.register(values)
-    if (result.error) {
-      return
-    }
+    await api.register(values)
     flags.succeed = true
   } else {
     const result = await api.login(values)

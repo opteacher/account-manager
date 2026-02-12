@@ -1,3 +1,5 @@
+import useGlobalStore from '@/stores/global'
+
 export interface ModelAPIResponse<T = any> {
   data?: T
   result?: T
@@ -43,7 +45,9 @@ export default {
   },
 
   all: async (mname: string, options?: any) => {
-    const response = await window.ipcRenderer.invoke(`api:${mname}:list`, options)
+    const store = useGlobalStore()
+    const { options: queryOptions } = options || {}
+    const response = await window.ipcRenderer.invoke(`api:model:list`, store.token, mname, queryOptions)
     return transformResponse(response)
   },
 

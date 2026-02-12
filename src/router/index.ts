@@ -1,5 +1,4 @@
-import axios from 'axios'
-import { makeRequest } from '@lib/utils'
+import { invokeIPC } from '@/apis/ipc'
 import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router'
 import Model from '../views/model.vue'
 import login from '../views/login.vue'
@@ -43,19 +42,7 @@ const router = createRouter({
 router.beforeEach(async (to, _from, next) => {
   if (to.matched.some(record => record.meta.reqLogin) && true) {
     try {
-      const result = await makeRequest(
-        axios.post([
-          '/login_platform',
-          '/api/v1/',
-          'account',
-          '/verify'
-        ].join(''), undefined, {
-          headers: { authorization: 'Bearer ' + useGlobalStore().token }
-        })
-      )
-      if (result.error) {
-        throw new Error(result.data.error)
-      }
+      await invokeIPC('api:account:verify', useGlobalStore().token)
       next()
     } catch (e) {
       next({
