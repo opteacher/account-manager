@@ -1,3 +1,8 @@
+---
+## ⚠️ DEPRECATED
+This repository is deprecated. Please migrate to [secure-ledger](https://github.com/opteacher/secure-ledger).
+---
+
 # 网页、SSH账号管理器
 保存各平台账号及登录方式，对秘钥进行加密保存。
 ## 生产打包
